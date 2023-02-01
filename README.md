@@ -25,4 +25,18 @@ To use this map go to multiplayer and jump to observer slot, leaving the player 
 
 ### Map Download
 
+Download the map from Releases:
+
 https://github.com/wdcqc/mutation_sc1/releases/tag/Release
+
+or scmscx.com:
+
+https://scmscx.com/map/f3dcRcbg
+https://scmscx.com/map/cfyt7r7k
+https://scmscx.com/map/qr8tq4bc
+https://scmscx.com/map/hy3VGTt7
+
+### Player vs AI version
+
+https://scmscx.com/map/pxVhkhfh
+
