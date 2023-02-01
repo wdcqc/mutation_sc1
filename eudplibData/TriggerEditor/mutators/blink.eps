@@ -1,0 +1,58 @@
+import PluginVariables as msqcvar;
+import utils;
+import main;
+
+function init() {
+}
+
+function loop8_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && cm.lastAttackingPlayer < 6) {
+		if(main.mutatorEnabled[50] == 0) { // compatability
+			cm.lastAttackingPlayer = 8;
+		}
+		if(rand() < 32768) {
+			var x, y = cm.getpos("pos");
+			setloc($L("shared"), x, y);
+			x += rand() / 128 - 256;
+			y += rand() / 128 - 256;
+			setloc($L("target"), x, y);
+			MoveUnit(1, cm.unitType, player, "shared", "target");
+			
+			RemoveUnitAt(All, 101, "shared", P9);
+			if(Bring(player, Exactly, 0, cm.unitType, "shared")) {
+				setloc_epd($L("target"), epd + 28 / 4);
+				SetMemory(6747180, SetTo, 281);
+				utils.scan_image(505, "shared", 17, 0);
+				utils.scan_image(505, "target", 17, 0);
+				SetMemory(6747180, SetTo, 255);
+			}
+		}
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && cm.lastAttackingPlayer < 8) {
+		if(main.mutatorEnabled[50] == 0) { // compatability
+			cm.lastAttackingPlayer = 8;
+		}
+		if(rand() < 16384) {
+			var x, y = cm.getpos("pos");
+			setloc($L("shared"), x, y);
+			x += rand() / 256 - 128;
+			y += rand() / 256 - 128;
+			setloc($L("target"), x, y);
+			MoveUnit(1, cm.unitType, player, "shared", "target");
+			
+			RemoveUnitAt(All, 101, "shared", P9);
+			if(Bring(player, Exactly, 0, cm.unitType, "shared")) {
+				setloc_epd($L("target"), epd + 28 / 4);
+				SetMemory(6747180, SetTo, 281);
+				utils.scan_image(505, "shared", 17, 0);
+				utils.scan_image(505, "target", 17, 0);
+				SetMemory(6747180, SetTo, 255);
+			}
+		}
+	}
+}

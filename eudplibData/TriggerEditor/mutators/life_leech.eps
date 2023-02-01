@@ -1,0 +1,22 @@
+import PluginVariables as msqcvar;
+function init() {
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106) {
+		if(cm.groundWeaponCooldown > 0 
+		|| cm.airWeaponCooldown > 0 
+		|| cm.spellCooldown > 0) {
+			const maxHP = dwread_epd(EPD(0x662350) + cm.unitType);
+			// restore hp
+			cm.hp += 320;
+			if(Switch("game_hard", Set)) {
+				cm.hp += 480;
+			}
+			if(cm.hp > maxHP) {
+				cm.hp = maxHP;
+			}
+		}
+	}
+}

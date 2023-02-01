@@ -1,0 +1,33 @@
+import PluginVariables as msqcvar;
+function init() {
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106) {
+		if(cm.killCount >= 15) {
+			if(cm.hp >= 256) {
+				cm.hp -= 72;
+			}
+			else {
+				cm.hp = 256;
+			}
+		}
+		else if(cm.killCount >= 10) {
+			if(cm.hp >= 256) {
+				cm.hp -= 48;
+			}
+			else {
+				cm.hp = 256;
+			}
+		}
+		else if(cm.killCount >= 5) {
+			if(cm.hp >= 256) {
+				cm.hp -= 24;
+			}
+			else {
+				cm.hp = 256;
+			}
+		}
+	}
+}

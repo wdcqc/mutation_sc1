@@ -1,0 +1,73 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const death_summons = utils.death_summons;
+
+function init() {
+	DoActions(
+		// weapon 91
+		SetMemoryX(6646076, SetTo, 1310720, -65536),
+		SetMemoryX(6648188, SetTo, 2293760, -65536),
+		SetMemoryX(6649908, SetTo, 3276800, -65536),
+		SetMemoryX(6645584, SetTo, 50331648, -16777216),
+		SetMemory(6649308, SetTo, 288),
+		SetMemoryX(6647824, SetTo, 754974720, -16777216),
+		SetMemoryX(6647652, SetTo, 6553600, -65536),
+		SetMemoryX(6649644, SetTo, 655360, -65536),
+		SetMemoryX(6650444, SetTo, 4390912, 4390912),
+		SetMemoryX(6645448, SetTo, 33554432, -16777216),
+		SetMemory(6647316, SetTo, 172),
+		SetMemoryX(6646248, SetTo, -2147483648, -16777216),
+		
+		// unit 27
+		SetMemoryX(6698704, SetTo, 1526726656, -16777216),
+		SetMemoryX(6690552, SetTo, -2113929216, -16777216),
+		SetMemoryX(6697552, SetTo, 0, -16777216),
+		SetMemory(6701292, SetTo, 402653188),
+		SetMemoryX(6702352, SetTo, 1476395008, -16777216),
+		SetMemoryX(6697320, SetTo, 285212672, -16777216),
+		SetMemory(6690976, SetTo, 131074),
+		SetMemory(6690980, SetTo, 131074),
+		SetMemory(6695116, SetTo, 0),
+		SetMemoryX(6690124, SetTo, 393216, -65536),
+		SetMemoryX(6693504, SetTo, -2030043136, -16777216),
+		SetMemoryX(6696632, SetTo, -2030043136, -16777216),
+		SetMemoryX(6697784, SetTo, -2046820352, -16777216),
+		SetMemoryX(6699624, SetTo, -2030043136, -16777216),
+		SetMemoryX(6703280, SetTo, -2030043136, -16777216),
+		SetMemoryX(6693040, SetTo, 0, -16777216)
+	);
+}
+
+function building_destruct(x, y) {
+	setloc($L("shared"), x, y);
+	const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+	if(spawn_ptr > 0) {
+		CreateUnit(1, 27, "shared", P7);
+		SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+		SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 1 * 16777216, 0xFF000000);
+		SetMemoryXEPD(spawn_epd + 272 / 4, SetTo, 100, 0x0000FFFF);
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(death_summons[ut] > 0) {
+		if(ut < 106) {
+			setloc($L("shared"), x, y);
+			const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+			if(spawn_ptr > 0) {
+				CreateUnit(1, 27, "shared", player);
+				SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+				SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 1 * 16777216, 0xFF000000);
+				SetMemoryXEPD(spawn_epd + 272 / 4, SetTo, 100, 0x0000FFFF);
+				utils.scan_image(333, "shared", 9, 9);
+			}
+		}
+		else {
+			building_destruct(x - 25, y - 25);
+			building_destruct(x - 25, y + 25);
+			building_destruct(x + 25, y - 25);
+			building_destruct(x + 25, y + 25);
+		}
+	}
+}

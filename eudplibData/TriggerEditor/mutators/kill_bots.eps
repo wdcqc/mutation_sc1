@@ -1,0 +1,61 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		// unit 104
+		SetMemory(6701600, SetTo, 1509965888),
+		SetMemoryX(6698784, SetTo, 130, 255),
+		SetMemoryX(6690632, SetTo, 130, 255),
+		SetMemoryX(6686864, SetTo, 18, 65535),
+		SetMemoryX(6697864, SetTo, 21, 255),
+		SetMemory(6691592, SetTo, 1048592),
+		SetMemory(6691596, SetTo, 983055),
+		SetMemory(6695424, SetTo, 2097184),
+		SetMemoryX(6702432, SetTo, 82, 255),
+		SetMemoryX(6686296, SetTo, 12, 255),
+		
+		// increase damage for weapons 9 & 10
+		SetMemoryX(6647488, Add, 1572864, -65536),
+		SetMemoryX(6647492, Add, 20, 65535)
+	);
+}
+
+function loop8_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType == 104) {
+		if(cm.killCount >= 5) {
+			cm.die();
+		}
+	}
+}
+
+function spawn() {
+	if(ElapsedTime(AtMost, 900)) {
+		CreateUnitWithProperties(1, 104, "altar", P7, UnitProperty(invincible=True));
+	}
+	else if(ElapsedTime(AtMost, 1500)) {
+		CreateUnitWithProperties(2, 104, "altar", P7, UnitProperty(invincible=True));
+	}
+	else if(ElapsedTime(AtMost, 2400)) {
+		CreateUnitWithProperties(3, 104, "altar", P7, UnitProperty(invincible=True));
+	}
+	const v = getcurpl();
+	setcurpl(P7);
+	RunAIScriptAt("JYDg", "altar");
+	setcurpl(v);
+}
+
+var time_to_spawn = 420;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, time_to_spawn)) {
+		spawn();
+		time_to_spawn += 140;
+		if(ElapsedTime(AtLeast, 1800)) {
+			time_to_spawn -= 50;
+		}
+		if(ElapsedTime(AtLeast, 3600)) {
+			time_to_spawn -= 50;
+		}
+	}
+}

@@ -1,0 +1,161 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+	SetMemory(6693800, SetTo, 2560000);
+	SetMemory(6690936, SetTo, 131074);
+	SetMemory(6690940, SetTo, 131074);
+	SetMemory(6695096, SetTo, 327685);
+	SetMemoryX(6690100, SetTo, 2, 2);
+}
+
+var boombot_force1_ptr = 0;
+var boombot_force1_epd = 0;
+var boombot_force2_ptr = 0;
+var boombot_force2_epd = 0;
+var boombot_force1_spawn_timer = 0;
+var boombot_force2_spawn_timer = 0;
+var spawn_cooldown_force1 = 300;
+var spawn_cooldown_force2 = 300;
+
+function loop8_normal() {
+	if(boombot_force1_ptr > 0) {
+		const cm = EPDCUnitMap(boombot_force1_epd);
+		if(cm.orderID > 0 && cm.hp > 0 && cm.unitType == 22) {
+			cm.hp = 2560000;
+			if(cm.removeTimer > 0 && cm.removeTimer < 20) {
+				const x, y = cm.getpos("pos");
+				cm.die();
+				boombot_force1_ptr = 0;
+				
+				setloc("shared", x, y);
+				const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+				if(spawn_ptr > 0) {
+					// spawn a nuke and set its order to explode
+					CreateUnit(1, 14, "shared", P7);
+					const nuke_cm = EPDCUnitMap(spawn_epd);
+					if(nuke_cm.unitType == 14) {
+						SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+						SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 125 * 256 + 5 * 65536 + 1 * 16777216, 0xFFFFFF00);
+					}
+				}
+			}
+			if(cm.orderID == 2 || cm.orderID == 3) {
+				const target_x, target_y = utils.get_force1_loc();
+				const x, y = cm.getpos("pos");
+				setloc("shared", x, y);
+				setloc("target", target_x, target_y);
+				Order(22, P9, "shared", Move, "target");
+			}
+		}
+		else {
+			boombot_force1_ptr = 0;
+		}
+	}
+	else {
+		if(ElapsedTime(AtLeast, 512)) {
+			boombot_force1_spawn_timer += 1;
+			if(boombot_force1_spawn_timer >= spawn_cooldown_force1) {
+				boombot_force1_spawn_timer = 0;
+				if(spawn_cooldown_force1 > 10) {
+					spawn_cooldown_force1 -= 10;
+				}
+				const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+				if(spawn_ptr > 0) {
+					const x, y = utils.get_neutral_loc();
+					setloc("shared", x, y);
+					
+					// create boombot
+					CreateUnitWithProperties(1, 22, "shared", P7, UnitProperty(hallucinated=True));
+					const boombot_cm = EPDCUnitMap(spawn_epd);
+					if(boombot_cm.unitType == 22) {
+						// successful
+						boombot_force1_ptr = spawn_ptr;
+						boombot_force1_epd = spawn_epd;
+						
+						// target
+						const target_x, target_y = utils.get_force1_loc();
+						setloc($L("target"), target_x, target_y);
+						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 0, 1073741824);
+						GiveUnits(All, 22, P7, "Anywhere", P9);
+						Order(22, P9, "Anywhere", Move, "target");
+						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 1073741824, 1073741824);
+						messages.announce_boom_bots(P1);
+						messages.announce_boom_bots(P2);
+						messages.announce_boom_bots(P3);
+					}
+				}
+			}
+		}
+	}
+	if(boombot_force2_ptr > 0) {
+		const cm = EPDCUnitMap(boombot_force2_epd);
+		if(cm.orderID > 0 && cm.hp > 0 && cm.unitType == 22) {
+			cm.hp = 2560000;
+			if(cm.removeTimer > 0 && cm.removeTimer < 20) {
+				const x, y = cm.getpos("pos");
+				cm.die();
+				boombot_force2_ptr = 0;
+				
+				setloc($L("shared"), x, y);
+				const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+				if(spawn_ptr > 0) {
+					// spawn a nuke and set its order to explode
+					CreateUnit(1, 14, "shared", P7);
+					const nuke_cm = EPDCUnitMap(spawn_epd);
+					if(nuke_cm.unitType == 14) {
+						SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+						SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 125 * 256 + 5 * 65536 + 1 * 16777216, 0xFFFFFF00);
+					}
+				}
+			}
+			if(cm.orderID == 2 || cm.orderID == 3) {
+				const target_x, target_y = utils.get_force2_loc();
+				const x, y = cm.getpos("pos");
+				setloc("shared", x, y);
+				setloc("target", target_x, target_y);
+				Order(22, P9, "shared", Move, "target");
+			}
+		}
+		else {
+			boombot_force2_ptr = 0;
+		}
+	}
+	else {
+		if(ElapsedTime(AtLeast, 512)) {
+			boombot_force2_spawn_timer += 1;
+			if(boombot_force2_spawn_timer >= spawn_cooldown_force2) {
+				boombot_force2_spawn_timer = 0;
+				if(spawn_cooldown_force2 > 10) {
+					spawn_cooldown_force2 -= 10;
+				}
+				const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+				if(spawn_ptr > 0) {
+					const x, y = utils.get_neutral_loc();
+					setloc("shared", x, y);
+					
+					// create boombot
+					CreateUnitWithProperties(1, 22, "shared", P7, UnitProperty(hallucinated=True));
+					const boombot_cm = EPDCUnitMap(spawn_epd);
+					if(boombot_cm.unitType == 22) {
+						// successful
+						boombot_force2_ptr = spawn_ptr;
+						boombot_force2_epd = spawn_epd;
+						
+						// target
+						const target_x, target_y = utils.get_force2_loc();
+						setloc($L("target"), target_x, target_y);
+						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 0, 1073741824);
+						GiveUnits(All, 22, P7, "Anywhere", P9);
+						Order(22, P9, "Anywhere", Move, "target");
+						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 1073741824, 1073741824);
+						messages.announce_boom_bots(P4);
+						messages.announce_boom_bots(P5);
+						messages.announce_boom_bots(P6);
+					}
+				}
+			}
+		}
+	}
+}

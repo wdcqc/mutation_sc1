@@ -1,0 +1,210 @@
+import PluginVariables as msqcvar;
+import main;
+import constants;
+
+const darkness_cueunitPTR = [0, 0, 0, 0, 0, 0, 0, 0];
+const darkness_cueunitEPD = [0, 0, 0, 0, 0, 0, 0, 0];
+var darkness_tempSelected = 0;
+const darkness_tempSelectQueue = EUDArray(12);
+
+function removeSightRange() {
+	DoActions(
+		SetMemory(6697528, SetTo, 0),
+		SetMemory(6697532, SetTo, 0),
+		SetMemory(6697536, SetTo, 16777473),
+		SetMemory(6697540, SetTo, 65537),
+		SetMemory(6697544, SetTo, 0),
+		SetMemory(6697548, SetTo, 65792),
+		SetMemory(6697552, SetTo, 0),
+		SetMemory(6697556, SetTo, 257),
+		SetMemory(6697560, SetTo, 2560),
+		SetMemory(6697564, SetTo, 0),
+		SetMemory(6697568, SetTo, 16842752),
+		SetMemory(6697572, SetTo, 16777473),
+		SetMemory(6697576, SetTo, 256),
+		SetMemory(6697580, SetTo, 16777216),
+		SetMemory(6697584, SetTo, 16843009),
+		SetMemory(6697588, SetTo, 65537),
+		SetMemory(6697592, SetTo, 0),
+		SetMemory(6697596, SetTo, 16843008),
+		SetMemory(6697600, SetTo, 257),
+		SetMemory(6697604, SetTo, 0),
+		SetMemory(6697608, SetTo, 65537),
+		SetMemory(6697612, SetTo, 65537),
+		SetMemory(6697616, SetTo, 1),
+		SetMemory(6697620, SetTo, 0),
+		SetMemory(6697624, SetTo, 65536),
+		SetMemory(6697628, SetTo, 68096),
+		SetMemory(6697632, SetTo, 256),
+		SetMemory(6697636, SetTo, 0),
+		SetMemory(6697640, SetTo, 0),
+		SetMemory(6697644, SetTo, 0),
+		SetMemory(6697648, SetTo, 0),
+		SetMemory(6697652, SetTo, 0),
+		SetMemory(6697656, SetTo, 0),
+		SetMemory(6697660, SetTo, 0),
+		SetMemory(6697664, SetTo, 0),
+		SetMemory(6697668, SetTo, 0),
+		SetMemory(6697672, SetTo, 0),
+		SetMemory(6697676, SetTo, 0),
+		SetMemory(6697680, SetTo, 0),
+		SetMemory(6697684, SetTo, 0),
+		SetMemory(6697688, SetTo, 0),
+		SetMemory(6697692, SetTo, 0),
+		SetMemory(6697696, SetTo, 0),
+		SetMemory(6697700, SetTo, 0),
+		SetMemory(6697704, SetTo, 0),
+		SetMemory(6697708, SetTo, 0),
+		SetMemory(6697712, SetTo, 0),
+		SetMemory(6697716, SetTo, 0),
+		SetMemory(6697720, SetTo, 0),
+		SetMemory(6697724, SetTo, 0),
+		SetMemory(6697728, SetTo, 65536),
+		SetMemory(6697732, SetTo, 0),
+		SetMemory(6697736, SetTo, 0),
+		SetMemory(6697740, SetTo, 0),
+		SetMemory(6697744, SetTo, 0),
+		SetMemory(6697748, SetTo, 0),
+		SetMemory(6697752, SetTo, 0)
+	);
+}
+
+function removeSightUpgrades() {
+	DoActions(
+		SetMemoryX(5820572, SetTo, 0, 255),
+		SetMemoryX(5820576, SetTo, 0, 65280),
+		SetMemoryX(5820588, SetTo, 0, 16711680),
+		SetMemoryX(5820592, SetTo, 0, 65280),
+		
+		SetMemoryX(5820616, SetTo, 0, 16711680),
+		SetMemoryX(5820620, SetTo, 0, -16777216),
+		SetMemoryX(5820636, SetTo, 0, 255),
+		SetMemoryX(5820636, SetTo, 0, -16777216),
+		
+		SetMemoryX(5820664, SetTo, 0, 255),
+		SetMemoryX(5820668, SetTo, 0, 65280),
+		SetMemoryX(5820680, SetTo, 0, 16711680),
+		SetMemoryX(5820684, SetTo, 0, 65280),
+	
+		SetMemoryX(5820708, SetTo, 0, 16711680),
+		SetMemoryX(5820712, SetTo, 0, -16777216),
+		SetMemoryX(5820728, SetTo, 0, 255),
+		SetMemoryX(5820728, SetTo, 0, -16777216),
+		
+		SetMemoryX(5820756, SetTo, 0, 255),
+		SetMemoryX(5820760, SetTo, 0, 65280),
+		SetMemoryX(5820772, SetTo, 0, 16711680),
+		SetMemoryX(5820776, SetTo, 0, 65280),
+	
+		SetMemoryX(5820800, SetTo, 0, 16711680),
+		SetMemoryX(5820804, SetTo, 0, -16777216),
+		SetMemoryX(5820820, SetTo, 0, 255),
+		SetMemoryX(5820820, SetTo, 0, -16777216)
+	);
+}
+
+function init() {
+	removeSightRange();
+	removeSightUpgrades();
+	
+	DoActions(
+		SetMemoryX(6697576, SetTo, 0, 65280),
+		SetMemoryX(6697808, SetTo, 5376, 65280),
+		SetMemory(6695204, SetTo, 0),
+		SetMemoryX(6696424, SetTo, 0, 65280),
+		SetMemoryX(6698960, SetTo, 0, 65280),
+		SetMemoryX(6690168, SetTo, 131072, -65536),
+		SetMemoryX(6701588, SetTo, 32768, 32768)
+	);
+	
+	if(main.mutatorEnabled[4]) { // laser drill
+		SetMemoryX(6696564, SetTo, 2621440, 16711680);
+	}
+	
+	for(var player = 0; player < 6; player++) {
+		if((Command(player, AtLeast, 1, "(buildings)") || Deaths(player, AtLeast, 1, 91)) && !constants.is_computer[player]) {
+			darkness_cueunitPTR[player], darkness_cueunitEPD[player] = cunitepdread_epd(EPD(0x628438));
+			CreateUnitWithProperties(1, 49, "QCUnit", player, UnitProperty(invincible=True));
+			SetMemoryEPD(darkness_cueunitEPD[player] + 52 / 4, SetTo, 0);
+			SetMemoryXEPD(darkness_cueunitEPD[player] + 56 / 4, SetTo, 0, 0x0000FFFF);
+		}
+	}
+}
+
+function remove_shared_vision() {
+	const v = getcurpl();
+	setcurpl(0);
+	RunAIScript("Turn OFF Shared Vision for Player 2");
+	RunAIScript("Turn OFF Shared Vision for Player 3");
+	setcurpl(1);
+	RunAIScript("Turn OFF Shared Vision for Player 1");
+	RunAIScript("Turn OFF Shared Vision for Player 3");
+	setcurpl(2);
+	RunAIScript("Turn OFF Shared Vision for Player 1");
+	RunAIScript("Turn OFF Shared Vision for Player 2");
+	setcurpl(3);
+	RunAIScript("Turn OFF Shared Vision for Player 5");
+	RunAIScript("Turn OFF Shared Vision for Player 6");
+	setcurpl(4);
+	RunAIScript("Turn OFF Shared Vision for Player 4");
+	RunAIScript("Turn OFF Shared Vision for Player 6");
+	setcurpl(5);
+	RunAIScript("Turn OFF Shared Vision for Player 4");
+	RunAIScript("Turn OFF Shared Vision for Player 5");
+	setcurpl(v);
+}
+
+/* basically this functions the same way as MSQC,
+ * except I didn't want it to destroy APM display when
+ * MSQC is unnecessary.
+ */
+
+function loop1_normal() {
+	if(Memory(0x51CE98, AtLeast, 4) && ElapsedTime(AtLeast, 5)) {
+		SetMemory(0x51CE98, SetTo, 3);
+		if(main.hard_mode) {
+			remove_shared_vision();
+		}
+	}
+	for(var player = 0; player < 6; player++) {
+		if(darkness_cueunitPTR[player] > 0) {
+			const cm = EPDCUnitMap(darkness_cueunitEPD[player]);
+			if(cm.orderID == 6) {
+				RemoveUnit("Map Revealer", player);
+				var tx, ty = posread_epd(darkness_cueunitEPD[player] + 88 / 4);
+				setloc("map_reveal", (tx - 200 + 213) * 1, (ty - 200 + 192) * 1);
+				CreateUnit(1, "Map Revealer", "map_reveal", player);
+				setloc("map_reveal", (tx - 200 + 426) * 1, (ty - 200 + 192) * 1);
+				CreateUnit(1, "Map Revealer", "map_reveal", player);
+				setloc("map_reveal", (tx - 200 + 639) * 1, (ty - 200 + 192) * 1);
+				CreateUnit(1, "Map Revealer", "map_reveal", player);
+				cm.orderID = 1;
+				cm.orderState = 0;
+			}
+		}
+	}
+		
+	// local action part
+	var x = wread(0x628448);
+	var y = wread(0x628470);
+	var lp = getuserplayerid();
+	if(lp < 6 && darkness_cueunitPTR[lp] > 0) {
+		darkness_tempSelected = 0;
+		var i, z;
+		for(i=0; i<12; i++) {
+			z = dwread_epd(EPD(0x6284B8) + i);
+			if(z > 0) {
+				darkness_tempSelectQueue[i] = z;
+				darkness_tempSelected += 1;
+			}
+			else {
+				break;
+			}
+		}
+		QueueGameCommand_Select(1, [darkness_cueunitPTR[lp]]);
+		QueueGameCommand_RightClick((x + 200) + (y + 200) * 65536);
+		if(darkness_tempSelected > 0) {
+			QueueGameCommand_Select(darkness_tempSelected, darkness_tempSelectQueue);
+		}
+	}
+}

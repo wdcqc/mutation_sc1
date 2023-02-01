@@ -1,0 +1,64 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const to_spread_x = EUDArray(50);
+const to_spread_y = EUDArray(50);
+var to_spread_count = 0;
+const spread_range = 80;
+var hp_decrease = 96;
+var hp_check = 100;
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		hp_check = 200;
+		hp_decrease = 192;
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	const cm = EPDCUnitMap(epd);
+	if(ut < 106 && ((cm.parasiteFlags & 64) > 0 || rand() < 4000) && to_spread_count < 50) {
+		to_spread_x[to_spread_count] = x;
+		to_spread_y[to_spread_count] = y;
+		to_spread_count += 1;
+	}
+}
+
+function loopdeath_comp(player, ut, x, y, epd) {
+	if(ut < 106) {
+		if(rand() < 22000 && to_spread_count < 50) {
+			to_spread_x[to_spread_count] = x;
+			to_spread_y[to_spread_count] = y;
+			to_spread_count += 1;
+		}
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106) {
+		if((cm.parasiteFlags & 64) > 0) {
+			if(cm.hp > hp_check) {
+				cm.hp -= hp_decrease;
+			}
+			else {
+				cm.die();
+			}
+		}
+		else if(MemoryXEPD(EPD(0x664080) + cm.unitType, AtLeast, 1, 1073807360)) {
+			for(var i = 0; i < to_spread_count; i++) {
+				const x, y = cm.getpos("pos");
+				if(to_spread_x[i] < x + spread_range && x < to_spread_x[i] + spread_range
+				&& to_spread_y[i] < y + spread_range && y < to_spread_y[i] + spread_range) {
+					cm.parasiteFlags |= 64;
+					setloc($L("scan"), x, y);
+					utils.scan_image(557, "scan", 13, 9);
+				}
+			}
+		}
+	}
+}
+
+function loop8_normal() {
+	to_spread_count = 0;
+}

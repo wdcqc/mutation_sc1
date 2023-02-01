@@ -1,0 +1,75 @@
+import PluginVariables as msqcvar;
+import utils;
+import constants;
+
+function init() {
+	for(var i = 0; i < 6; i++) {
+		if(!constants.is_computer[i]) {
+			SetMemoryEPD(EPD(0x5821A4) + i, SetTo, 1200);
+			SetMemoryEPD(EPD(0x582234) + i, SetTo, 1200);
+			SetMemoryEPD(EPD(0x5822C4) + i, SetTo, 1200);
+		}
+	}
+}
+
+var total_supply_force1 = 0;
+var used_supply_force1 = 0;
+var total_supply_force2 = 0;
+var used_supply_force2 = 0;
+function loop1_normal() {
+	var supply_delta = 0;
+	var supply_used_delta = 0;
+	var i;
+
+	// force 1
+	for(i = 0; i < 3; i++) {
+		if(!constants.is_computer[i]) {
+			supply_delta += dwread_epd(EPD(0x582144) + i) - total_supply_force1;
+			supply_used_delta += dwread_epd(EPD(0x582174) + i) - used_supply_force1;
+			supply_delta += dwread_epd(EPD(0x5821D4) + i) - total_supply_force1;
+			supply_used_delta += dwread_epd(EPD(0x582204) + i) - used_supply_force1;
+			supply_delta += dwread_epd(EPD(0x582264) + i) - total_supply_force1;
+			supply_used_delta += dwread_epd(EPD(0x582294) + i) - used_supply_force1;
+		}
+	}
+	total_supply_force1 += supply_delta;
+	used_supply_force1 += supply_used_delta;
+	
+	for(i = 0; i < 3; i++) {
+		if(!constants.is_computer[i]) {
+			SetMemoryEPD(EPD(0x582144) + i, SetTo, total_supply_force1);
+			SetMemoryEPD(EPD(0x5821D4) + i, SetTo, total_supply_force1);
+			SetMemoryEPD(EPD(0x582264) + i, SetTo, total_supply_force1);
+			SetMemoryEPD(EPD(0x582174) + i, SetTo, used_supply_force1);
+			SetMemoryEPD(EPD(0x582204) + i, SetTo, used_supply_force1);
+			SetMemoryEPD(EPD(0x582294) + i, SetTo, used_supply_force1);
+		}
+	}
+
+	// force 2
+	supply_delta = 0;
+	supply_used_delta = 0;
+	for(i = 3; i < 6; i++) {
+		if(!constants.is_computer[i]) {
+			supply_delta += dwread_epd(EPD(0x582144) + i) - total_supply_force2;
+			supply_used_delta += dwread_epd(EPD(0x582174) + i) - used_supply_force2;
+			supply_delta += dwread_epd(EPD(0x5821D4) + i) - total_supply_force2;
+			supply_used_delta += dwread_epd(EPD(0x582204) + i) - used_supply_force2;
+			supply_delta += dwread_epd(EPD(0x582264) + i) - total_supply_force2;
+			supply_used_delta += dwread_epd(EPD(0x582294) + i) - used_supply_force2;
+		}
+	}
+	total_supply_force2 += supply_delta;
+	used_supply_force2 += supply_used_delta;
+	
+	for(i = 3; i < 6; i++) {
+		if(!constants.is_computer[i]) {
+			SetMemoryEPD(EPD(0x582144) + i, SetTo, total_supply_force2);
+			SetMemoryEPD(EPD(0x5821D4) + i, SetTo, total_supply_force2);
+			SetMemoryEPD(EPD(0x582264) + i, SetTo, total_supply_force2);
+			SetMemoryEPD(EPD(0x582174) + i, SetTo, used_supply_force2);
+			SetMemoryEPD(EPD(0x582204) + i, SetTo, used_supply_force2);
+			SetMemoryEPD(EPD(0x582294) + i, SetTo, used_supply_force2);
+		}
+	}
+}

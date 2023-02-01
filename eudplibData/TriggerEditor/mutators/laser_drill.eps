@@ -1,0 +1,96 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		SetMemoryX(6694472, SetTo, 640000, -256),
+		SetMemoryX(6684548, SetTo, 196608, 16711680),
+		SetMemory(6701944, SetTo, 1342210049),
+		SetMemoryX(6698868, SetTo, 5767168, 16711680),
+		SetMemoryX(6690716, SetTo, 5767168, 16711680),
+		SetMemoryX(6696564, SetTo, 6553600, 16711680),
+		SetMemory(6695768, SetTo, 2031647),
+		SetMemoryX(6701108, SetTo, 40000, 65535),
+		SetMemoryX(6693668, SetTo, 1179648, 16711680),
+		SetMemoryX(6696796, SetTo, 1179648, 16711680),
+		SetMemoryX(6697948, SetTo, 1245184, 16711680),
+		SetMemoryX(6699788, SetTo, 1507328, 16711680),
+		SetMemoryX(6703444, SetTo, 1179648, 16711680),
+		SetMemoryX(6693204, SetTo, 196608, 16711680),
+		
+		SetMemoryX(6647648, SetTo, 20, 65535),
+		SetMemoryX(6649640, SetTo, 3, 65535),
+		SetMemoryX(6647824, SetTo, 48, 255),
+		SetMemory(6649296, SetTo, 3200),
+		SetMemoryX(6645448, SetTo, 1, 255),
+		SetMemoryX(6646248, SetTo, 128, 255),
+		SetMemory(6647304, SetTo, 148),
+		
+		SetMemory(6748948, SetTo, 120)
+	);
+
+	if(Switch("game_hard", Set)) {
+		SetMemoryX(6647824, Subtract, 8, 255);
+		SetMemoryX(6694472, Add, 640000, -256);
+	}
+	
+	CreateUnit(1, 190, "laser_drill_force1", P7);
+	CreateUnit(1, 190, "laser_drill_force2", P7);
+	GiveUnits(All, 190, P7, "laser_drill_force1", P12);
+	GiveUnits(All, 190, P7, "laser_drill_force2", P12);
+}
+
+function loop1_normal() {
+	if(Bring(P12, AtLeast, 1, 190, "laser_drill_force1")) {
+		for(var player = 0; player < 3; player++) {
+			if(Command(player, AtLeast, 1, "(buildings)")) {
+				GiveUnits(All, 190, P12, "laser_drill_force1", player);
+			}
+		}
+	}
+	if(Bring(P12, AtLeast, 1, 190, "laser_drill_force2")) {
+		for(var player = 3; player < 6; player++) {
+			if(Command(player, AtLeast, 1, "(buildings)")) {
+				GiveUnits(All, 190, P12, "laser_drill_force2", player);
+			}
+		}
+	}
+	once(ElapsedTime(AtLeast, 30)) {
+		CreateUnit(1, 101, "laser_drill_force1", Force2);
+		CreateUnit(1, 101, "laser_drill_force2", Force1);
+	}
+	once(ElapsedTime(AtLeast, 1400)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 1800)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 2700)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 3600)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 4500)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 5400)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(ElapsedTime(AtLeast, 6300)) {
+		SetMemoryX(6647648, Add, 8, 65535);
+		SetMemoryX(6647824, Subtract, 4, 255);
+	}
+	once(Bring(AllPlayers, AtMost, 0, 190, "laser_drill_force1")) {
+		utils.scan_image(318, "laser_drill_force1", 9, 9);
+	}
+	once(Bring(AllPlayers, AtMost, 0, 190, "laser_drill_force2")) {
+		utils.scan_image(318, "laser_drill_force2", 9, 9);
+	}
+}

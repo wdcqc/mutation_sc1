@@ -1,0 +1,329 @@
+import PluginVariables as msqcvar;
+import ai.ai_loop;
+import ai.ai_main;
+import main;
+import menu;
+import utils;
+import messages;
+
+var keydown = 0;
+
+function detect_screen_size() {
+    const x = wread(0x628448);
+    const y = wread(0x628470);
+    setloc("shared", 2048, 2048);
+    CenterViewAll("shared");
+    const offset_x = 2048 - wread(0x628448);
+    const offset_y = 2048 - wread(0x628470);
+    setloc("shared", offset_x + x, offset_y + y);
+    CenterViewAll("shared");
+    return offset_x, offset_y; // relative to 426 240
+}
+
+function get_true_mouse_pos() {
+    const offset_x, offset_y = detect_screen_size();
+    if(getuserplayerid() >= 128) {
+        const prop_x = wread(0x6CDDC4) * offset_x / 426;
+        const prop_y = wread(0x6CDDC8) * offset_y / 240;
+        return wread(0x62848C) + prop_x, wread(0x6284A8) + prop_y;
+    }
+    else {
+        return wread(0x62848C) + wread(0x6CDDC4), wread(0x6284A8) + wread(0x6CDDC8);
+    }
+}
+
+var image_created = 0;
+function cursor_image(loc : TrgLocation) {
+    if(!image_created) {
+        DoActions(
+            SetMemory(0x0066f33c, SetTo, 307),
+            SetMemoryX(0x666458, SetTo, 445, 65535),
+            CreateUnit(1, 33, loc, P7),
+            RemoveUnit(33, P7),
+            SetMemoryX(0x666458, SetTo, 546, 65535),
+            SetMemory(0x0066f33c, SetTo, 288)
+        );
+        image_created = 1;
+    }
+}
+
+function delete_selection() {
+    for(var select_epd = EPD(0x6284B8); select_epd < EPD(0x6284E8); select_epd++) {
+        const ptr, epd = cunitepdread_epd(select_epd);
+        if(ptr > 0) {
+            const cm = EPDCUnitMap(epd);
+            if(cm.playerID < 8 && MemoryXEPD(epd + 220 / 4, Exactly, 0, 67108864)) {
+                cm.die();
+            }
+        }
+    }
+}
+
+function patrol_selection() {
+	const x, y = get_true_mouse_pos();
+	setloc("target", x, y);
+    cursor_image("target");
+    for(var select_epd = EPD(0x6284B8); select_epd < EPD(0x6284E8); select_epd++) {
+        const ptr, epd = cunitepdread_epd(select_epd);
+        if(ptr > 0) {
+            const cm = EPDCUnitMap(epd);
+            cm.setloc("shared");
+            if(cm.playerID < 8 && MemoryXEPD(epd + 220 / 4, Exactly, 0, 67108864)) {
+                Order(cm.unitType, cm.playerID, "shared", Patrol, "target");
+            }
+        }
+    }
+}
+
+function order_selection() {
+	const x, y = get_true_mouse_pos();
+	setloc("target", x, y);
+    cursor_image("target");
+    for(var select_epd = EPD(0x6284B8); select_epd < EPD(0x6284E8); select_epd++) {
+        const ptr, epd = cunitepdread_epd(select_epd);
+        if(ptr > 0) {
+            const cm = EPDCUnitMap(epd);
+            cm.setloc("shared");
+            if(cm.playerID < 8 && MemoryXEPD(epd + 220 / 4, Exactly, 0, 67108864)) {
+                Order(cm.unitType, cm.playerID, "shared", Move, "target");
+            }
+        }
+    }
+}
+
+var menu_key_state = 0;
+
+function menu_obs() {
+    if(menu.custom_menu_stage == 1) {
+        once {
+	        SetMemory(0x0058dc94, Add, 128);
+            RemoveUnit(223, P10);
+        }
+        const ox, oy = getlocTL("ModeSelect");
+        const click_x = wread(0x6CDDC4) + wread(0x62848C) - ox;
+        const click_y = wread(0x6CDDC8) + wread(0x6284A8) - oy - 8;
+        var i = 0;
+        var first_time = 0;
+        for(var yi = 0; yi < 9; yi++) {
+            for(var xi = 0; xi < 6; xi++) {
+                if(click_x < 16 + 72 + menu.box_x_array[xi] && click_x + 0 > menu.box_x_array[xi]
+                && click_y < 16 + menu.box_y_array[yi] && click_y + 16 > menu.box_y_array[yi]) {
+                    if(Memory(0x6CDDC0, Exactly, 2) && keydown == 0) {
+                        keydown = 1;
+                        first_time = 1;
+                        menu.toggle_choice(i);
+                    }
+                    else if(first_time == 0) {
+                        first_time = 1;
+                        menu.set_info(i);
+                    }
+                }
+                i++;
+            }
+        }
+    }
+    const sel_ptr, sel_epd = cunitepdread_epd(EPD(0x6284B8));
+    if(sel_ptr > 0) {
+        const sel_cm = EPDCUnitMap(sel_epd);
+        if(sel_cm.unitType == 16) {
+            // is kerrigan
+            if(Memory(0x6CDDC0, Exactly, 8)) { // rightclick
+                setloc("shared", wread(0x62848C) + wread(0x6CDDC4), wread(0x6284A8) + wread(0x6CDDC8));
+                Order(16, sel_cm.playerID, "ModeSelect", Move, "shared");
+                cursor_image("shared");
+            }
+            if(MemoryX(0x00596a58, Exactly, 16777216, -16777216)) { // C
+                if(!keydown) {
+                    if(sel_cm.secondaryOrder == 109) {
+                        sel_cm.secondaryOrder = 23;
+                    }
+                    else {
+                        sel_cm.secondaryOrder = 109;
+                    }
+                    keydown = 1;
+                }
+            }
+            else if(menu.custom_menu_stage == 0) {
+                keydown = 0;
+            }
+        }
+    }
+    if(MemoryX(0x00596a58, Exactly, 16777216, -16777216) && menu.custom_menu_stage == 1 && !keydown) { // C
+        const cm = EPDCUnitMap(menu.selector_epd);
+        cm.secondaryOrder = 109;
+        keydown = 1;
+    }
+    else if(MemoryX(0x00596a58, Exactly, 0, -16777216) && Memory(0x6CDDC0, Exactly, 0)) {
+        keydown = 0;
+        image_created = 0;
+    }
+    if(Memory(0x6CDDC0, Exactly, 32)) { // middleclick
+        SetMemory(3704409292, SetTo, 0);
+    }
+}
+
+const nuke_group = UnitGroup(512);
+function send_nuke() {
+    once {
+        SetMemoryX(0x00661534, SetTo, 2, 2);
+    }
+	const x, y = get_true_mouse_pos();
+	setloc("shared", x, y);
+    cursor_image("shared");
+	if(y < 16) {
+		return;
+	}
+	const ty = (y < 272) ? 16 : y - 256;
+	setloc("shared", x, ty);
+	const ptr, epd = cunitepdread_epd(EPD(0x628438));
+	if(ptr > 0) {
+        SetMemoryX(0x006605fc, SetTo, 1048576, 16711680);
+		CreateUnit(1, 14, "shared", P7);
+        SetMemoryX(0x006605fc, SetTo, 2097152, 16711680);
+		GiveUnits(All, 14, P7, "shared", P10);
+		const cm = EPDCUnitMap(epd);
+        if(cm.unitType == 14 && cm.hp > 0) {
+            cm.removeTimer = 200;
+            SetMemoryEPD(epd + 88 / 4, SetTo, x + y * 65536);
+            SetMemoryXEPD(epd + 76 / 4, SetTo, 6 * 256 + 0 * 65536 + 0 * 16777216, 0xFFFFFF00);
+            nuke_group.add(epd);
+        }
+	}
+}
+
+function update_nuke() {
+	const v = getcurpl();
+	foreach(unit : nuke_group.cploop) {
+		unit.move_cp(40 / 4);
+		const x, y = posread_cp(0);
+		unit.move_cp(88 / 4);
+		const target_y = wread_cp(0, 2);
+		unit.move_cp(272 / 4);
+		const remove_timer = wread_cp(0, 0);
+		if(target_y == 0 || (y < 4 + target_y && target_y < 4 + y) || remove_timer < 10) {
+			unit.move_cp(88 / 4);
+			SetDeaths(CurrentPlayer, SetTo, x + y * 65536, 0);
+			unit.move_cp(76 / 4);
+			SetDeathsX(CurrentPlayer, SetTo, 125 * 256 + 5 * 65536 + 1 * 16777216, 0, 0xFFFFFF00);
+			unit.remove();
+		}
+	}
+	setcurpl(v);
+}
+
+function loop_obs() {
+    // print_line 1
+	printAllAt(1, "\x1dspeed: {}, \x1dai: \x08{:t}{} \x0e{:t}{} \x0f{:t}{} \x10{:t}{} \x11{:t}{} \x15{:t}{} \x1dbuild_speed: \x08{} \x0e{} \x0f{} \x10{} \x11{} \x15{}",
+		wread(0x5124F0),
+		main.race_keywords[ai_main.ai_races[0]], ai_main.ai_types[0] + 1,
+		main.race_keywords[ai_main.ai_races[1]], ai_main.ai_types[1] + 1,
+		main.race_keywords[ai_main.ai_races[2]], ai_main.ai_types[2] + 1,
+		main.race_keywords[ai_main.ai_races[3]], ai_main.ai_types[3] + 1,
+		main.race_keywords[ai_main.ai_races[4]], ai_main.ai_types[4] + 1,
+		main.race_keywords[ai_main.ai_races[5]], ai_main.ai_types[5] + 1,
+		ai_loop.build_time_reduction[0],
+		ai_loop.build_time_reduction[1],
+		ai_loop.build_time_reduction[2],
+		ai_loop.build_time_reduction[3],
+		ai_loop.build_time_reduction[4],
+		ai_loop.build_time_reduction[5]
+	);
+
+    // key press
+    if(MemoryX(0x00596af0, Exactly, 16777216, -16777216)) { // [
+        if(!keydown) {
+		    SetMemory(0x5124F0, Add, 2);
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596af4, Exactly, 256, 65280) && Memory(0x5124F0, AtLeast, 6)) { // ]
+        if(!keydown) {
+		    SetMemory(0x5124F0, Subtract, 2);
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596a44, Exactly, 65536, 16711680)) { // DELETE
+        if(!keydown) {
+		    delete_selection();
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596a68, Exactly, 1, 255)) { // P
+        if(!keydown) {
+		    patrol_selection();
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596a64, Exactly, 256, 65280)) { // M
+        if(!keydown) {
+		    order_selection();
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596a64, Exactly, 65536, 16711680)) { // N
+        if(!keydown) {
+		    send_nuke();
+            PlayWAVAll("sound/bullet/tnsfir00.wav");
+            keydown = 1;
+        }
+    }
+    else if(MemoryX(0x00596a6c, Exactly, 65536, 16711680)) { // V
+        if(!keydown) {
+		    if(utils.victory_check_disabled) {
+                utils.enable_victory_check();
+                DisplayTextAll("\x1DAuto-exit enabled.");
+                PlayWAVAll("sound/misc/uicwht00.wav");
+            }
+            else {
+                utils.disable_victory_check();
+                DisplayTextAll("\x1DAuto-exit disabled.");
+                PlayWAVAll("sound/misc/uicwht00.wav");
+            }
+            keydown = 1;
+        }
+    }
+    else {
+        keydown = 0;
+        image_created = 0;
+    }
+
+    update_nuke();
+
+    // selection
+    if(ElapsedTime(AtLeast, 90) && MemoryX(0x00596a58, Exactly, 65536, 16711680)) { // B
+        const sel_ptr, sel_epd = cunitepdread_epd(EPD(0x6284B8));
+        if(sel_ptr > 0) {
+            const sel_cm = EPDCUnitMap(sel_epd);
+            epdswitch(sel_epd + 100 / 4, 0xff) { // unit type
+                case $U("Terran Command Center"), $U("Protoss Nexus"), $U("Zerg Hatchery"), $U("Zerg Lair"), $U("Zerg Hive"):
+                    SetResources(sel_cm.playerID, Add, 50, OreAndGas);
+                    ai_loop.set_btr(sel_cm.playerID, 128, 32);
+                    break;
+                case $U("Terran Refinery"), $U("Protoss Assimilator"), $U("Zerg Extractor"):
+                    ai_loop.force_attack(sel_cm.playerID);
+                    break;
+            }
+        }
+    }
+
+	once(ElapsedTime(AtLeast, 60)) {
+		printAll("\x03[Observer Hint] \x1DPress \x07[ \x1Dand \x07] \x1Dto change game speed! Press \x07mouse middle key \x1Dto exit. \x1D(Exiting via menu crashes SC)\n\x1dWhile pressing \x07B\x1d, select an AI base (nexus) to boost the player, or select gas building (assimilator) to send an attack.\n\x1DPress \x07Delete \x1Dto kill units.");
+	}
+	if(Memory(0x6CDDC0, Exactly, 8)) { // rightclick
+		DisplayTextAll("\n\n\n\n\n\n\n\x03[Hotkeys] \x07[ \x1D& \x07]\x1D: change game speed; \x07Del\x1D: kill units; \x07N\x1D: drop nuke; \x1DPress \x07mouse middle key \x1Dto exit the game.\n\x1DSelect unit: \x1D\x07M\x1d: move selected, \x07P\x1d: patrol selected; \x07B\x1D: select AI base = boost, gas building = send attack.");
+		DisplayTextAll(messages.objective_buffer.StringIndex);
+	}
+	if(Memory(0x6CDDC0, Exactly, 32)) { // middleclick
+		SetMemory(0xdfdcfdfc, SetTo, 0);
+	}
+}
+
+function regular_ob_controls() {
+    const v = getcurpl();
+    setcurpl(getuserplayerid());
+	if(Memory(0x6CDDC0, Exactly, 8)) { // rightclick
+		DisplayText("\n\n\n\n\n\n\n\n", 4);
+		DisplayText(messages.objective_buffer.StringIndex, 4);
+	}
+    setcurpl(v);
+}

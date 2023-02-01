@@ -1,0 +1,187 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		// unit 174
+		SetMemoryX(6696548, SetTo, 458752, 16711680),
+		SetMemoryX(6697700, SetTo, 458752, 16711680),
+		SetMemory(6701880, SetTo, 1409286145),
+		SetMemoryX(6697468, SetTo, 0, 16711680),
+		SetMemory(6692152, SetTo, 65537),
+		SetMemory(6692156, SetTo, 65537),
+		SetMemory(6695704, SetTo, 2097184),
+		SetMemoryX(6693652, SetTo, 1179648, 16711680),
+		SetMemoryX(6696780, SetTo, 1179648, 16711680),
+		SetMemoryX(6703428, SetTo, 1179648, 16711680),
+		SetMemoryX(6697932, SetTo, 1245184, 16711680),
+		SetMemoryX(6699772, SetTo, 1507328, 16711680),
+		SetMemoryX(6693188, SetTo, 196608, 16711680),
+		SetMemory(6694408, SetTo, 38400),
+		
+		// sprite 220
+		SetMemoryX(6710040, SetTo, 754, 65535),
+		
+		// image 754
+		SetMemoryX(6734912, SetTo, 65536, 16711680),
+		SetMemory(6748176, SetTo, 179)
+	);
+}
+
+const spawnerLocX = EUDArray(50);
+const spawnerLocY = EUDArray(50);
+var spawnerCount = 0;
+var spawner_to_ping = 0;
+var spawn_count = 1;
+var spawn_unit = 0;
+
+var nextSpawnerSpawn = 360;
+function spawnSpawner() {
+	if(ElapsedTime(AtLeast, nextSpawnerSpawn)) {
+		var iter = 0;
+		RemoveUnitAt(All, "(any unit)", "buffer", AllPlayers);
+		CreateUnit(1, 174, "buffer", P7);
+		while(iter < 10) {
+			const x, y = utils.get_neutral_loc();
+			setloc("spawn_rift", x, y);
+			
+			MoveUnit(1, 174, P7, "buffer", "spawn_rift");
+			RemoveUnitAt(All, 101, "buffer", P7);
+			if(Bring(P7, AtMost, 0, 174, "buffer")) {
+				nextSpawnerSpawn += 90;
+				break;
+			}
+			iter += 1;
+		}
+		RemoveUnitAt(All, 174, "buffer", P7);
+	}
+}
+
+var nextSpawnerPing = 390;
+function pingSpawner() {
+	if(ElapsedTime(AtLeast, nextSpawnerPing)) {
+		var i;
+		for(i=0; i<spawner_to_ping; i++) {
+			setloc("spawn_rift", spawnerLocX[i], spawnerLocY[i]);
+			MinimapPingAll("spawn_rift");
+		}
+		nextSpawnerPing += 30;
+	}
+}
+
+function sendOrders() {
+	const v = getcurpl();
+	setcurpl(P7);
+	RunAIScriptAt("JYDg", "Anywhere");
+	setcurpl(v);
+}
+
+const spawnListZ1 = [37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,43,43,43,43,43,43,43,43,43,43,50,50,39,39];
+const spawnCountZ1 = [3,3,3,3,4,4,4,4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1];
+const spawnListZ2 = [50,50,50,50,37,37,37,37,37,37,37,37,37,37,37,37,38,45,38,42,103,103,50,50,43,43,43,43,43,43,43,43,38,38,103,103,39,39,39,39,44,44,44,44,44,44,44,44,62,62,62,62,38,38,38,38,47,47,47,47,47,47,47,47];
+const spawnCountZ2 = [2,2,2,2,6,6,6,6,4,4,4,4,2,2,2,2,1,1,1,1,2,2,2,2,2,2,2,2,1,1,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,3,4,2,2,2,2,4,4,4,4];
+const spawnListP1 = [65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,61,61,61,61,61,61,61,61,70,70,70,70,70,70,70,70];
+const spawnListP2 = [65,65,65,65,65,65,65,65,66,66,66,66,66,66,66,66,67,67,67,67,67,67,67,67,61,61,61,61,61,61,61,61,83,83,65,65,84,84,70,70,70,70,70,70,60,60,60,60,60,60,71,71,72,66,70,70,70,70,68,68,68,68,63,63];
+const spawnListT1 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,1,1,1,1,1,1,1,1,34,34,34,34,34,34,34,34];
+const spawnListT2 = [0,0,0,0,32,32,32,32,1,1,1,1,34,34,34,34,2,2,2,2,2,2,2,2,0,0,0,3,3,3,3,3,3,3,5,5,5,5,5,8,8,8,3,3,8,8,8,8,8,8,9,9,9,9,12,12,2,2,58,58,58,8,32,32];
+const spawnCountT2 = [4,4,4,4,4,4,4,4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2];
+const spawnListBasic = [37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 65, 65, 65, 32, 32, 32, 32, 38, 38, 38, 38, 2, 2, 66, 66];
+const spawnCountBasic = [3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+var currentType = 2;
+var typeRotateTime = 300;
+var nextSpawn = 390;
+
+var nextTypeRotation = 900;
+function typeRotateLoop() {
+	if(ElapsedTime(AtLeast, nextTypeRotation)) {
+		var x = 1;
+		if(rand() > 32767) {
+			x = 2;
+		}
+		currentType = (currentType + x) % 3;
+		nextTypeRotation += 450;
+	}
+}
+
+function loop32_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(player == 6 && cm.unitType == 174) {
+		var x, y = posread_epd(epd + 40 / 4);
+		if(spawnerCount < 50) {
+			spawnerLocX[spawnerCount] = x;
+			spawnerLocY[spawnerCount] = y;
+			spawnerCount += 1;
+		}
+	}
+}
+
+function spawnUnits() {
+	if(Command(P7, AtMost, 200, "(men)")) {
+		for(var i = 0; i < spawner_to_ping; i++) {
+			setloc($L("spawn_rift"), spawnerLocX[i], spawnerLocY[i]);
+			CreateUnitWithProperties(spawn_count, spawn_unit, "buffer", P7, UnitProperty(energy=63));
+			MoveUnit(All, spawn_unit, P7, "buffer", "spawn_rift");
+			RemoveUnitAt(All, spawn_unit, "buffer", P7);
+		}
+	}
+}
+
+function spawnUpdate() {
+	if(ElapsedTime(AtLeast, nextSpawn)) {
+		const ind = rand() & 63;
+		if(Command(P6, AtMost, 200, "(men)")) {
+			if(ElapsedTime(AtMost, 600)) {
+				spawn_count = spawnCountBasic[ind];
+				spawn_unit = spawnListBasic[ind];
+			}
+			else if(currentType == 0 && ElapsedTime(AtMost, 1800)) {
+				spawn_count = spawnCountZ1[ind];
+				spawn_unit = spawnListZ1[ind];
+			}
+			else if(currentType == 1 && ElapsedTime(AtMost, 1800)) {
+				spawn_count = 1;
+				spawn_unit = spawnListP1[ind];
+			}
+			else if(currentType == 2 && ElapsedTime(AtMost, 1800)) {
+				spawn_count = 1;
+				spawn_unit = spawnListT1[ind];
+			}
+			else if(currentType == 0) {
+				spawn_count = spawnCountZ2[ind];
+				spawn_unit = spawnListZ2[ind];
+			}
+			else if(currentType == 1) {
+				spawn_count = 1;
+				spawn_unit = spawnListP2[ind];
+			}
+			else if(currentType == 2) {
+				spawn_count = spawnCountT2[ind];
+				spawn_unit = spawnListT2[ind];
+			}
+		}
+		spawnUnits();
+		sendOrders();
+		
+		if(ElapsedTime(AtMost, 1200) || Command(P7, AtLeast, 16, 174)) {
+			nextSpawn += 50;
+		}
+		else if(ElapsedTime(AtLeast, 3000)) {
+			nextSpawn += 30;
+		}
+		else {
+			nextSpawn += 40;
+		}
+	}
+}
+
+function loop32_normal() {
+	if(spawnerCount > 0) {
+		spawner_to_ping = spawnerCount;
+		spawnerCount = 0;
+	}
+	typeRotateLoop();
+	spawnUpdate();
+	spawnSpawner();
+	pingSpawner();
+}

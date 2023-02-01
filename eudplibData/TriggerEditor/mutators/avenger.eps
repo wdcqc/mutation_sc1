@@ -1,0 +1,52 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const death_summons = utils.death_summons;
+
+const avenge_x = EUDArray(10);
+const avenge_y = EUDArray(10);
+var avenge_count = 0;
+const avenge_range = 128;
+
+function init() {
+}
+
+function loopdeath_comp(player, ut, x, y, epd) {
+	if(ut < 106 && player < 6) {
+		if(death_summons[ut] > 0 && avenge_count < 10) {
+			avenge_x[avenge_count] = x;
+			avenge_y[avenge_count] = y;
+			avenge_count += 1;
+		}
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && cm.hp > 0) {
+		for(var i = 0; i < avenge_count; i++) {
+			const x, y = cm.getpos("pos");
+			if(avenge_x[i] < x + avenge_range && x < avenge_x[i] + avenge_range
+			&& avenge_y[i] < y + avenge_range && y < avenge_y[i] + avenge_range) {
+				// restore hp
+				const maxHP = dwread_epd(EPD(0x662350) + cm.unitType);
+				cm.hp += 5120;
+				if(Switch("game_hard", Set)) {
+					cm.hp += 10240;
+				}
+				if(cm.hp > maxHP) {
+					cm.hp = maxHP;
+				}
+				cm.stimTimer = 20;
+				
+				setloc($L("scan"), x, y);
+				utils.scan_image(545, "scan", 17, 0);
+				break;
+			}
+		}
+	}
+}
+
+function loop8_normal() {
+	avenge_count = 0;
+}

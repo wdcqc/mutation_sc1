@@ -1,0 +1,16 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.lastAttackingPlayer < 8) {
+		if(cm.ensnareTimer == 0) {
+			cm.topSpeed /= 2;
+		}
+		cm.ensnareTimer = 18;
+		cm.lastAttackingPlayer = 8;
+	}
+}

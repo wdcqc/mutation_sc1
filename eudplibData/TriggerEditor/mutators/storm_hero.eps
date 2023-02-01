@@ -1,0 +1,54 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const heroes = [20, 100, 19, 21, 29, 10, 54, 53, 48, 37, 57, 55, 56, 51, 98, 75, 77, 78, 79, 76, 80, 82, 81];
+const normals = [0, 1, 2, 8, 12, 32, 37, 38, 39, 40, 42, 43, 44, 45, 60, 61, 65, 66, 67, 68, 70, 72, 83];
+const hero_cooldowns = EUDArray(25);
+const hero_array_len = 24;
+var order_units_loop = 0;
+var hero_count_minus_1 = 0;
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		hero_count_minus_1 = 2;
+	}
+}
+
+function loop8_normal() {
+	order_units_loop += 1;
+	if(order_units_loop >= 12) {
+		order_units_loop = 0;
+	}
+	for(var player = 0; player < 6; player++) {
+		for(var i = 0; i < hero_array_len; i++) {
+			if(Command(player, AtLeast, 6, normals[i])) {
+				if(Command(player, AtMost, hero_count_minus_1, heroes[i])) {
+					if(hero_cooldowns[i] > 0) {
+						hero_cooldowns[i] -= 1;
+					}
+					else {
+						CreateUnit(1, heroes[i], $L("p1start") + player, player);
+						hero_cooldowns[i] = 120;
+						if(ElapsedTime(AtLeast, 3100)) {
+							hero_cooldowns[i] = 30;
+						}
+						else if(ElapsedTime(AtLeast, 2200)) {
+							hero_cooldowns[i] = 45;
+						}
+						else if(ElapsedTime(AtLeast, 1500)) {
+							hero_cooldowns[i] = 60;
+						}
+					}
+				}
+				else if(order_units_loop == 0) {
+					MoveLocation("target", normals[i], player, "Anywhere");
+					utils.order_computer(heroes[i], player, "Anywhere", Patrol, "target");
+				}
+			}
+			else if(order_units_loop == 0 && Command(player, AtLeast, 1, heroes[i])) {
+				utils.decide_target_if_comp("target", player);
+				utils.order_computer(heroes[i], player, "Anywhere", Patrol, "target");
+			}
+		}
+	}
+}

@@ -1,0 +1,37 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const self_matrix_units = [1,1,1,1,0,1,0,0,1,1,1,1,1,0,0,1,1,1,0,1,1,1,0,1,0,1,0,0,1,1,1,0,1,0,1,0,0,1,1,1,1,0,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+function init() {
+	SetMemoryX(6644620, SetTo, 50, 65535);
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && cm.lastAttackingPlayer < 8) {
+		cm.lastAttackingPlayer = 8;
+		if(self_matrix_units[cm.unitType] && cm.energy >= 50 * 256 && cm.defensiveMatrixTimer == 0 && (cm.orderID >= 150 || (cm.orderID <= 14 && cm.orderID > 0))) {
+			cm.orderID = 141;
+			cm.orderState = 0;
+			cm.orderTargetUnit = 4 * epd + 0x58A364; // unit own ptr
+		}
+	}
+	if(cm.defensiveMatrixTimer > 10) {
+		if(Switch("game_hard", Cleared)) {
+			cm.defensiveMatrixTimer -= 10;
+			if(cm.defensiveMatrixHp >= 150 * 256) {
+				cm.defensiveMatrixHp = 125 * 256;
+			}
+		}
+		else {
+			cm.defensiveMatrixTimer -= 3;
+		}
+		if(cm.energy >= 25 * 256) {
+			cm.energy -= 128;
+		}
+	}
+	else if(cm.defensiveMatrixTimer > 1) {
+		cm.defensiveMatrixTimer = 1;
+	}
+}

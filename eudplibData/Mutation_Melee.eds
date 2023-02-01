@@ -1,0 +1,15 @@
+[main]
+input: ../scmd/input.scx
+output: ../output/mutation_melee.scx
+[DataEditor.py]
+[ExtraDataEditor.py]
+[dataDumper]
+
+[TriggerEditor\main.eps]
+[TriggerEditor\simple_melee.py]
+
+
+[freeze]
+[unlimiter]
+
+

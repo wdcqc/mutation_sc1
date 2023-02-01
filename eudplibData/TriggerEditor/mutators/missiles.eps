@@ -1,0 +1,138 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		// unit92
+		SetMemory(6694080, SetTo, 25600),
+		SetMemoryX(6693340, SetTo, 1, 255),
+		SetMemoryX(6697388, SetTo, 14, 255),
+		SetMemory(6701552, SetTo, 402653252),
+		SetMemoryX(6696468, SetTo, 7, 255),
+		SetMemoryX(6698772, SetTo, 130, 255),
+		SetMemoryX(6702420, SetTo, 195, 255),
+		SetMemory(6691496, SetTo, 327685),
+		SetMemory(6691500, SetTo, 327685),
+		SetMemory(6695376, SetTo, 720907),
+		SetMemoryX(6693572, SetTo, 23, 255),
+		SetMemoryX(6696700, SetTo, 23, 255),
+		SetMemoryX(6697852, SetTo, 23, 255),
+		SetMemoryX(6699692, SetTo, 23, 255),
+		SetMemoryX(6703348, SetTo, 23, 255),
+		SetMemoryX(6693108, SetTo, 0, 255),
+		SetMemoryX(6685140, SetTo, 3, 255),
+		SetMemoryX(6690256, SetTo, 2, 2),
+		SetMemoryX(6699004, SetTo, 2, 255),
+
+		// weapon94
+		SetMemoryX(6647660, SetTo, 150, 65535),
+		SetMemoryX(6649652, SetTo, 10, 65535),
+		SetMemoryX(6647828, SetTo, 3604480, 16711680),
+		SetMemory(6649320, SetTo, 16),
+		SetMemoryX(6645588, SetTo, 131072, 16711680),
+		SetMemoryX(6646084, SetTo, 30, 65535),
+		SetMemoryX(6648196, SetTo, 60, 65535),
+		SetMemoryX(6649916, SetTo, 100, 65535),
+		SetMemoryX(6650452, SetTo, 3, 65535),
+		SetMemoryX(6645452, SetTo, 327680, 16711680),
+		SetMemory(6647328, SetTo, 172),
+		SetMemoryX(6645820, SetTo, 349, 65535),
+		SetMemoryX(6648732, SetTo, 303, 65535),
+		SetMemoryX(6646252, SetTo, 8388608, 16711680),
+
+		// flingy195
+		SetMemory(7119364, SetTo, 2880),
+		SetMemoryX(7118332, SetTo, 18874368, -65536),
+		SetMemory(7117884, SetTo, 28888),
+		SetMemoryX(7118560, SetTo, 671088640, -16777216),
+		SetMemoryX(7117080, SetTo, 0, -16777216),
+		SetMemoryX(7120028, SetTo, 22609920, -65536),
+
+		// 153
+		SetMemoryX(6697448, SetTo, 4352, 65280),
+		SetMemory(6701796, SetTo, 939524100),
+		SetMemoryX(6690376, SetTo, 131072, -65536),
+		SetMemoryX(6699064, SetTo, 512, 65280),
+		SetMemoryX(6698832, SetTo, 24064, 65280),
+		SetMemoryX(6690680, SetTo, 33280, 65280),
+		SetMemoryX(6696528, SetTo, 1792, 65280),
+		SetMemoryX(6702480, SetTo, 22528, 65280),
+		SetMemory(6691984, SetTo, 65537),
+		SetMemory(6691988, SetTo, 65537),
+		SetMemory(6695620, SetTo, 0),
+		SetMemoryX(6693632, SetTo, 34560, 65280),
+		SetMemoryX(6696760, SetTo, 34560, 65280),
+		SetMemoryX(6697912, SetTo, 34304, 65280),
+		SetMemoryX(6699752, SetTo, 34560, 65280),
+		SetMemoryX(6703408, SetTo, 34560, 65280),
+		SetMemoryX(6693168, SetTo, 256, 65280)
+	);
+	if(Switch("game_hard", Set)) {
+		SetMemoryX(0x00656f6c, Add, 150, 65535);
+	}
+}
+
+function loop8_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType == 92 && cm.orderID == 23) {
+		const x, y = cm.getpos("pos");
+		setloc($L("shared"), x, y);
+		const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+		if(spawn_ptr > 0) {
+			RemoveUnit(153, P7);
+			CreateUnit(1, 153, "shared", P7);
+			SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+			SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 1 * 16777216, 0xFF000000);
+			KillUnitAt(All, 92, "shared", P7);
+		}
+	}
+}
+
+function spawn_missile() {
+	const x, y = utils.get_central_loc();
+	setloc("shared", x, y);
+	const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+	if(spawn_ptr > 0) {
+		SetMemory(6747276, SetTo, 86);
+		SetMemory(6746188, SetTo, 250);
+		CreateUnit(1, 92, "shared", P7);
+		SetMemory(6747276, SetTo, 240);
+		SetMemory(6746188, SetTo, 275);
+		const cm = EPDCUnitMap(spawn_epd);
+		if(cm.unitType == 92 && cm.hp > 0) {
+			if(rand() < 32768) {
+				const target_x, target_y = utils.get_force1_loc();
+				SetMemoryEPD(spawn_epd + 88 / 4, SetTo, target_x + target_y * 65536);
+				SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 6 * 256 + 0 * 65536 + 1 * 16777216, 0xFFFFFF00);
+			}
+			else {
+				const target_x, target_y = utils.get_force2_loc();
+				SetMemoryEPD(spawn_epd + 88 / 4, SetTo, target_x + target_y * 65536);
+				SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 6 * 256 + 0 * 65536 + 1 * 16777216, 0xFFFFFF00);
+			}
+		}
+	}
+}
+var next_spawn = 300;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, next_spawn)) {
+		spawn_missile();
+		if(ElapsedTime(AtMost, 750)) {
+			next_spawn += 15;
+		}
+		else if(ElapsedTime(AtMost, 1200)) {
+			next_spawn += 10;
+		}
+		else if(ElapsedTime(AtMost, 1900)) {
+			next_spawn += 7;
+		}
+		else if(ElapsedTime(AtMost, 2600)) {
+			next_spawn += 4;
+		}
+		else {
+			next_spawn += 2;
+		}
+	}
+	RemoveUnit(92, Force1);
+	RemoveUnit(92, Force2);
+}

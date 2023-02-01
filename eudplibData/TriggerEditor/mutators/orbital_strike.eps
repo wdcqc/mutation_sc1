@@ -1,0 +1,106 @@
+import PluginVariables as msqcvar;
+import utils;
+import constants;
+
+function init() {
+	// dashed circle 574
+	SetMemory(6747456, SetTo, 310);
+}
+
+const orbit_x = EUDArray(11);
+const orbit_y = EUDArray(11);
+const orbit_dx = EUDArray(11);
+const orbit_dy = EUDArray(11);
+var orbit_count = 0;
+var orbit_state = 0;
+var target_count = 1;
+
+function reset_orbit_count() {
+	if(ElapsedTime(AtMost, 1200)) {
+		target_count = 1;
+	}
+	else if(ElapsedTime(AtMost, 1600)) {
+		target_count = 2;
+	}
+	else if(ElapsedTime(AtMost, 2000)) {
+		target_count = 3;
+	}
+	else if(ElapsedTime(AtMost, 2400)) {
+		target_count = 4;
+	}
+	else {
+		target_count = 5;
+	}
+	orbit_count = 0;
+}
+
+function loop32_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && utils.is_in_central_zone(cm.posX, cm.posY)) {
+		if(orbit_state == 0 && orbit_count < target_count && cm.currentSpeed1 > 1100 && rand() < 400 * target_count) {
+			orbit_x[orbit_count], orbit_y[orbit_count] = cm.getpos("pos");
+			if(cm.currentVelocityX < 1000000) {
+				orbit_dx[orbit_count] = orbit_x[orbit_count] + cm.currentVelocityX / 8;
+			}
+			else {
+				orbit_dx[orbit_count] = orbit_x[orbit_count] - (0 - cm.currentVelocityX) / 8;
+			}
+			if(cm.currentVelocityY < 1000000) {
+				orbit_dy[orbit_count] = orbit_y[orbit_count] + cm.currentVelocityY / 8;
+			}
+			else {
+				orbit_dy[orbit_count] = orbit_y[orbit_count] - (0 - cm.currentVelocityY) / 8;
+			}
+			
+			if(orbit_dx[orbit_count] < constants.map_max_x
+			&& orbit_dy[orbit_count] < constants.map_max_y) {
+				orbit_count += 1;
+			}
+		}
+	}
+}
+
+function loop1_normal() {
+	// wtf????? what have I done
+	if(orbit_state == 0 && orbit_count == target_count) {
+		orbit_state = 1;
+	}
+	else if(orbit_state > 0) {
+		orbit_state += 1;
+	}
+	if(orbit_state > 360) {
+		orbit_state = 0;
+		reset_orbit_count();
+	}
+	
+	if(orbit_state >= 1 && orbit_state < 120 && (orbit_state + 10) % 11 < 6) {
+		for(var i = 0; i < orbit_count; i++) {
+			const pp = ((orbit_state + 10) % 11);
+			const x = (orbit_x[i] * pp + orbit_dx[i] * (5-pp)) / 5;
+			const y = (orbit_y[i] * pp + orbit_dy[i] * (5-pp)) / 5;
+			setloc($L("shared"), x, y);
+			utils.scan_image(574, "shared", 17, 13);
+			if(orbit_state == 1 || orbit_state == 3 || orbit_state == 5) {
+				foreach(player : EUDLoopPlayer()) {
+					setcurpl(player);
+					MinimapPing("shared");
+				}
+				setcurpl(0);
+			}
+		}
+	}
+	
+	if(orbit_state >= 120 && orbit_state < 126) {
+		for(var i = 0; i < orbit_count; i++) {
+			const pp = (orbit_state % 6);
+			const x = (orbit_x[i] * pp + orbit_dx[i] * (5-pp)) / 5;
+			const y = (orbit_y[i] * pp + orbit_dy[i] * (5-pp)) / 5;
+			setloc($L("shared"), x, y);
+			dilateloc($L("shared"), 32, 32);
+			CreateUnit(1, 84, "shared", P7);
+			KillUnit(84, P7);
+			KillUnitAt(All, "(men)", "shared", Force1);
+			KillUnitAt(All, "(men)", "shared", Force2);
+		}
+	}
+}

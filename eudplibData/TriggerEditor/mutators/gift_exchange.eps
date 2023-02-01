@@ -1,0 +1,59 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+	DoActions(
+		SetMemory(6694608, SetTo, 768),
+		SetMemoryX(6702080, SetTo, 0, 8390656),
+		SetMemoryX(6690520, SetTo, 2, 2),
+		SetMemory(6692552, SetTo, 131074),
+		SetMemory(6692556, SetTo, 131074),
+		SetMemory(6695904, SetTo, 327685),
+		SetMemoryX(6693704, SetTo, 23, 255),
+		SetMemoryX(6696832, SetTo, 23, 255),
+		SetMemoryX(6703480, SetTo, 23, 255)
+	);
+}
+
+function loop1_normal() {
+	for(var player = 0; player < 8; player++) {
+		if(Kills(player, AtLeast, 1, 224)) {
+			SetMemoryEPD(EPD(0x58A2A4) + player, Subtract, 1);
+			const half_player = player / 2;
+			if(player % 2 == 0) {
+				DoActions(
+					SetMemoryEPD(EPD(5821104) + 23 * half_player, Add, 16843009),
+					SetMemoryEPD(EPD(5821108) + 23 * half_player, Add, 16843009),
+					SetMemoryEPD(EPD(5821112) + 23 * half_player, Add, 16843009),
+					SetMemoryEPD(EPD(5821116) + 23 * half_player, Add, 16843009)
+				);
+			}
+			else {
+				DoActions(
+					SetMemoryXEPD(EPD(5821148) + 23 * half_player, Add, 16842752, -65536),
+					SetMemoryEPD(EPD(5821152) + 23 * half_player, Add, 16843009),
+					SetMemoryEPD(EPD(5821156) + 23 * half_player, Add, 16843009),
+					SetMemoryEPD(EPD(5821160) + 23 * half_player, Add, 16843009),
+					SetMemoryXEPD(EPD(5821164) + 23 * half_player, Add, 257, 65535)
+				);
+			}
+			messages.announce_gift_exchange(player);
+		}
+	}
+}
+
+var nextSpawn = 240;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, nextSpawn) && ElapsedTime(AtMost, 3600)) {
+		const x, y = utils.get_central_loc();
+		setloc("shared", x, y);
+
+		const spawned = utils.safe_spawn(1, 224, P7, "shared", "buffer");
+		if(spawned) {
+			nextSpawn += 240;
+			GiveUnits(All, 224, P7, "Anywhere", P11);
+			messages.announce_gift_exchange_spawn();
+		}
+	}
+}

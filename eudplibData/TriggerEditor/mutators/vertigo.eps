@@ -1,0 +1,25 @@
+import PluginVariables as msqcvar;
+import utils;
+
+var next_vertigo = 0;
+function init() {
+	next_vertigo = rand() % 350;
+}
+
+function loop32_normal() {
+	once {
+		// disable vertigo in SP
+		if(Memory(0x57F0B4, Exactly, 0)) {
+			next_vertigo = 9999999;
+		}
+	}
+	if(ElapsedTime(AtLeast, next_vertigo)) {
+		var player;
+		foreach(player : EUDLoopPlayer()) {
+			const x, y = utils.get_neutral_loc();
+			setloc("shared", x, y);
+			CenterView("shared");
+		}
+		next_vertigo += rand() % 120;
+	}
+}

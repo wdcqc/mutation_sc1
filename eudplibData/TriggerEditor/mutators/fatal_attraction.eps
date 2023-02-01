@@ -1,0 +1,45 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const death_summons = utils.death_summons;
+var prob = 18000;
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		prob = 32000;
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(death_summons[ut] > 0 && rand() < prob) {
+		setloc($L("attract"), x, y);
+		if(ut < 106) {
+			dilateloc($L("attract"), 128, 128);
+		}
+		else {
+			dilateloc($L("attract"), 192, 192);
+		}
+		if(player < 3) {
+			Order("(men)", Force2, "attract", Move, "attract");
+		}
+		else {
+			Order("(men)", Force1, "attract", Move, "attract");
+		}
+		utils.scan_image(391, "attract", 10, 9);
+	}
+}
+
+function loopdeath_comp(player, ut, x, y, epd) {
+	if(death_summons[ut] > 0 && rand() < 40000) {
+		setloc($L("attract"), x, y);
+		if(ut < 106) {
+			dilateloc($L("attract"), 128, 128);
+		}
+		else {
+			dilateloc($L("attract"), 192, 192);
+		}
+		Order("(men)", Force1, "attract", Move, "attract");
+		Order("(men)", Force2, "attract", Move, "attract");
+		utils.scan_image(391, "attract", 10, 9);
+	}
+}

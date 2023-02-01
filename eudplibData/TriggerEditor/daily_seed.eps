@@ -1,0 +1,25 @@
+import PluginVariables as msqcvar;
+const room_select_enabled = true;
+
+var day_count;
+function daily_seed() {
+	// read the time(0) value
+	const seed = dwread(0x6D0F38);
+	day_count = seed / 86400 - 19264;
+	if(room_select_enabled) {
+		if(MemoryX(7147336, Exactly, 35, 255) || MemoryX(7147336, Exactly, 64, 255)) {
+			if(MemoryX(7147336, AtLeast, 0x3000, 0x0000FF00) && MemoryX(7147336, AtMost, 0x3900, 0x0000FF00)) {
+				day_count = 0;
+				var room_str_ptr = 7147337;
+				var current_char = bread(room_str_ptr);
+				while(current_char >= 0x30 && current_char <= 0x39 && room_str_ptr < 7147347) {
+					day_count *= 10;
+					day_count += current_char - 0x30;
+					room_str_ptr++;
+					current_char = bread(room_str_ptr);
+				}
+			}
+		}
+	}
+	srand(day_count);
+}

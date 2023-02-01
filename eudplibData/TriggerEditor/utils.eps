@@ -1,0 +1,314 @@
+import PluginVariables as msqcvar;
+import messages;
+import constants;
+
+function disable_dark_archon_double_race() {
+	var player_loop;
+	for(player_loop = 0; player_loop < 4; player_loop++) {
+		if(MemoryXEPD(EPD(0x6D0FD8) + player_loop * 9, Exactly, 2 * 65536, 0x00FF0000)) {
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 104 / 4, SetTo, 0, 0xFFFF0000);
+			SetMemoryEPD(EPD(0x57F27C) + player_loop * 57 + 108 / 4, SetTo, 0);
+			SetMemoryEPD(EPD(0x57F27C) + player_loop * 57 + 112 / 4, SetTo, 0);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 116 / 4, SetTo, 0, 0x00FFFFFF);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 120 / 4, SetTo, 0, 0xFFFF00FF);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 124 / 4, SetTo, 0, 0x0000FFFF);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 128 / 4, SetTo, 0, 0xFF000000);
+			SetMemoryEPD(EPD(0x57F27C) + player_loop * 57 + 132 / 4, SetTo, 0);
+			SetMemoryEPD(EPD(0x57F27C) + player_loop * 57 + 136 / 4, SetTo, 0);
+			SetMemoryEPD(EPD(0x57F27C) + player_loop * 57 + 140 / 4, SetTo, 0);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 144 / 4, SetTo, 0, 0x00FF00FF);
+			SetMemoryXEPD(EPD(0x57F27C) + player_loop * 57 + 148 / 4, SetTo, 0, 0x0000FF00);
+		}
+	}
+}
+
+function rand_player_force1() {
+	// this is the fastest way
+	if(Command(P1, AtLeast, 1, "(buildings)")) {
+		if(Command(P2, AtLeast, 1, "(buildings)")) {
+			if(Command(P3, AtLeast, 1, "(buildings)")) {
+				return rand() % 3;
+			}
+			else {
+				return rand() % 2;
+			}
+		}
+		else {
+			if(Command(P3, AtLeast, 1, "(buildings)")) {
+				return (rand() % 2) * 2;
+			}
+			else {
+				return 0;
+			}
+		}
+	}
+	else {
+		if(Command(P2, AtLeast, 1, "(buildings)")) {
+			if(Command(P3, AtLeast, 1, "(buildings)")) {
+				return rand() % 2 + 1;
+			}
+			else {
+				return 1;
+			}
+		}
+		else {
+			if(Command(P3, AtLeast, 1, "(buildings)")) {
+				return 2;
+			}
+			else {
+				// this disables CreateUnit calls
+				return 11;
+			}
+		}
+	}
+}
+
+function rand_player_force2() {
+	// this is the fastest way
+	if(Command(P4, AtLeast, 1, "(buildings)")) {
+		if(Command(P5, AtLeast, 1, "(buildings)")) {
+			if(Command(P6, AtLeast, 1, "(buildings)")) {
+				return 3 + rand() % 3;
+			}
+			else {
+				return 3 + rand() % 2;
+			}
+		}
+		else {
+			if(Command(P6, AtLeast, 1, "(buildings)")) {
+				return (rand() % 2 == 1) ? 5 : 3;
+			}
+			else {
+				return 3;
+			}
+		}
+	}
+	else {
+		if(Command(P5, AtLeast, 1, "(buildings)")) {
+			if(Command(P6, AtLeast, 1, "(buildings)")) {
+				return rand() % 2 + 4;
+			}
+			else {
+				return 4;
+			}
+		}
+		else {
+			if(Command(P6, AtLeast, 1, "(buildings)")) {
+				return 5;
+			}
+			else {
+				// this disables CreateUnit calls
+				return 11;
+			}
+		}
+	}
+}
+
+function rand_player() {
+	if(Command(Force2, AtMost, 0, "(buildings)")) {
+		return rand_player_force1();
+	}
+	else if(Command(Force1, AtLeast, 1, "(buildings)") && rand() < 32768) {
+		return rand_player_force1();
+	}
+	else {
+		return rand_player_force2();
+	}
+}
+
+// use these new loc-funcs
+
+function get_force1_loc() {
+	// return 0 + rand() * 1024 / 65536, 0 + rand() * 4096 / 65536;
+	return rand() / 64, rand() / 16;
+}
+
+function get_force2_loc() {
+	// return 0 + rand() * 1024 / 65536, 0 + rand() * 4096 / 65536;
+	return 5120 + rand() / 64, rand() / 16;
+}
+
+function get_neutral_loc() {
+	// return 1024 + rand() * 4096 / 65536, 0 + rand() * 4096 / 65536;
+	return 1024 + rand() / 16, rand() / 16;
+}
+
+function get_central_loc() {
+	// return 2048 + rand() * 2048 / 65536, 0 + rand() * 4096 / 65536;
+	return 2048 + rand() / 32, rand() / 16;
+}
+
+function is_in_neutral_zone(x, y) {
+	return (x >= 1024 && x < 5120) ? 1 : 0;
+}
+
+function is_in_central_zone(x, y) {
+	return (x >= 2048 && x < 4096) ? 1 : 0;
+}
+
+// effects
+
+function scan_image(image : Image, loc : TrgLocation, image_df, image_original_df) {
+	bwrite(0x669E28 + image, image_df);
+	DoActions(
+		SetMemoryX(0x666458, SetTo, image, 65535),
+		CreateUnit(1, 33, loc, P7),
+		RemoveUnit(33, P7),
+		SetMemoryX(0x666458, SetTo, 546, 65535)
+	);
+	bwrite(0x669E28 + image, image_original_df);
+}
+
+
+const death_summons = [2, 2, 2, 2, 0, 4, 0, 2, 3, 5, 0, 3, 9, 0, 0, 2, 0, 6, 0, 0, 6, 0, 0, 0, 0, 6, 0, 0, 0, 0, 4, 0, 2, 0, 2, 0, 0, 2, 2, 6, 2, 0, 3, 3, 5, 3, 2, 2, 0, 0, 2, 0, 4, 2, 0, 5, 5, 0, 3, 0, 3, 2, 5, 4, 2, 2, 2, 2, 4, 3, 3, 5, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 4, 4, 0, 0, 4, 5, 4, 4, 0, 0, 6, 0, 0, 0, 4, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 6, 0, 6, 6, 6, 6, 0, 0, 0, 0, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 6, 0, 0, 6, 0, 0, 0, 0, 6, 6, 6, 6, 0, 6, 6, 0, 6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+function safe_spawn(count, unit : TrgUnit, player : TrgPlayer, loc : TrgLocation, buffer: TrgLocation) {
+	RemoveUnitAt(All, "(any unit)", buffer, AllPlayers);
+	CreateUnit(count, unit, buffer, player);
+	MoveUnit(count, unit, player, buffer, loc);
+	RemoveUnitAt(All, 101, buffer, P9);
+	if(Bring(player, AtMost, 0, unit, buffer)) {
+		return 1;
+	}
+	RemoveUnitAt(All, "(any unit)", buffer, AllPlayers);
+	return 0;
+}
+
+function give_back_units() {
+	const v = getcurpl();
+	setcurpl(P1);
+	GiveUnits(All, "(any unit)", P10, "p1start", P1);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p1start");
+	}
+	setcurpl(P2);
+	GiveUnits(All, "(any unit)", P10, "p2start", P2);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p2start");
+	}
+	setcurpl(P3);
+	GiveUnits(All, "(any unit)", P10, "p3start", P3);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p3start");
+	}
+	setcurpl(P4);
+	GiveUnits(All, "(any unit)", P10, "p4start", P4);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p4start");
+	}
+	setcurpl(P5);
+	GiveUnits(All, "(any unit)", P10, "p5start", P5);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p5start");
+	}
+	setcurpl(P6);
+	GiveUnits(All, "(any unit)", P10, "p6start", P6);
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterView("p6start");
+	}
+	setcurpl(v);
+}
+
+function move_critter() {
+	if(Bring(P12, AtLeast, 1, "(men)", "buffer")) {
+		const x, y = get_neutral_loc();
+		setloc("shared", x, y);
+		MoveUnit(1, "(men)", P12, "buffer", "shared");
+	}
+	else {
+		RemoveUnitAt(All, 215, "buffer", P10);
+	}
+}
+
+function clear_unit_buffer() {
+	DoActions(
+		MoveUnit(All, "(any unit)", Force1, "buffer", "bufferout"),
+		MoveUnit(All, "(any unit)", Force2, "buffer", "bufferout"),
+		RemoveUnitAt(All, "(any unit)", "buffer", Force1),
+		RemoveUnitAt(All, "(any unit)", "buffer", Force2),
+		MoveUnit(All, "(any unit)", P7, "buffer", "bufferout"),
+		MoveUnit(All, "(any unit)", P9, "buffer", "bufferout"),
+		MoveUnit(All, "(any unit)", P10, "buffer", "bufferout"),
+		MoveUnit(All, "(any unit)", P11, "buffer", "bufferout")
+	);
+}
+
+var victory_check_disabled = 0;
+var has_won = 0;
+var wait_timer = 0;
+var wait_to_reveal = 0;
+function victory_check() {
+	if(ElapsedTime(AtLeast, 30) && victory_check_disabled == 0) {
+		if(Command(Force1, AtLeast, 1, "(buildings)") && Command(Force2, AtMost, 0, "(buildings)")) {
+			once {
+				messages.victory_force1();
+				has_won = 1;
+			}
+		}
+		else if(Command(Force1, AtMost, 0, "(buildings)") && Command(Force2, AtLeast, 1, "(buildings)")) {
+			once {
+				messages.victory_force2();
+				has_won = 2;
+			}
+		}
+	}
+	if(has_won > 0) {
+		wait_timer += 1;
+		if(wait_timer >= 3) {
+			once {
+				if(has_won == 1) {
+					SetSwitch("game_win_force1", Set);
+				}
+				else if(has_won == 2) {
+					SetSwitch("game_win_force2", Set);
+				}
+			}
+		}
+	}
+}
+
+function decide_target(loc : TrgLocation, player : TrgPlayer) {
+	// this relies on p*start being consecutive locations
+	if(player < 3) {
+		const target_player = rand_player_force2();
+		MoveLocation(loc, "(buildings)", target_player, $L("p1start") + target_player);
+	}
+	else if(player < 6) {
+		const target_player = rand_player_force1();
+		MoveLocation(loc, "(buildings)", target_player, $L("p1start") + target_player);
+	}
+	else {
+		const target_player = rand_player();
+		MoveLocation(loc, "(buildings)", target_player, $L("p1start") + target_player);
+	}
+}
+
+function decide_target_if_comp(loc : TrgLocation, player : TrgPlayer) {
+	if(constants.is_computer[player]) {
+		decide_target(loc, player);
+	}
+}
+
+function order_computer(unit : TrgUnit, player : TrgPlayer, loc : TrgLocation, ord : TrgOrder, dest : TrgLocation) {
+	if(constants.is_computer[player]) {
+		Order(unit, player, loc, ord, dest);
+	}
+}
+
+function robust_randomize() {
+	if(MemoryX(0x006d10b0, Exactly, 0, 65280) && MemoryX(0x0057efe4, Exactly, 2, 255)) {
+		// fix observer rand
+		srand(dwread(0x51CE8C));
+	}
+	else {
+		randomize();
+	}
+}
+
+function disable_victory_check() {
+	victory_check_disabled = 1;
+}
+
+function enable_victory_check() {
+	victory_check_disabled = 0;
+}

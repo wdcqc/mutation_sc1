@@ -1,0 +1,1086 @@
+import PluginVariables as msqcvar;
+import mutators.all_cloaked;
+import mutators.avenger;
+import mutators.blink;
+import mutators.boom_bots;
+import mutators.broodlings;
+import mutators.concussive_attacks;
+import mutators.critter_hunt;
+import mutators.darkness;
+import mutators.death_flame;
+import mutators.diffusion;
+import mutators.double_edged;
+import mutators.drop_pods;
+import mutators.fatal_attraction;
+import mutators.fear;
+import mutators.gift_exchange;
+import mutators.halloween;
+import mutators.just_die;
+import mutators.kill_bots;
+import mutators.laser_drill;
+import mutators.lava;
+import mutators.life_leech;
+import mutators.lucky_envelopes;
+import mutators.mad;
+import mutators.mineral_shield;
+import mutators.minesweeper;
+import mutators.missiles;
+import mutators.naughty_list;
+import mutators.nukes;
+import mutators.orbital_strike;
+import mutators.order_cost;
+import mutators.outbreak;
+import mutators.photon_overload;
+import mutators.plague;
+import mutators.polarity;
+import mutators.propagator;
+import mutators.purifier_beam;
+import mutators.random_spell;
+import mutators.rapid_fire;
+import mutators.self_destruct;
+import mutators.self_matrix;
+import mutators.shared_supply;
+import mutators.short_sighted;
+import mutators.silence;
+import mutators.slim_pickings;
+import mutators.speed_freaks;
+import mutators.storm_hero;
+import mutators.takeover;
+import mutators.time_rift;
+import mutators.transmutation;
+import mutators.twister;
+import mutators.vertigo;
+import mutators.void_reanimator;
+import mutators.void_rift;
+import mutators.walking_infested;
+
+import utils;
+import fix_ccmu;
+
+import ai.ai_loop;
+import ai.ai_main;
+
+import resrand;
+import menu;
+import messages;
+import daily_seed;
+import constants;
+import initialize;
+import ob_controls;
+
+const mutatorEnabled = EUDArray(70);
+var total_mutators_enabled = 0;
+var is_random_mode = 0;
+var is_custom_mutation = 0;
+var hard_mode = 0;
+
+/* 
+ * loop system
+ * let each mutator decide the unit loop interval & involved players.
+ * if both a lower and a higher loop is enabled, the lower one calls
+ * the act function of the higher one, ensuring it runs only one unit
+ * loop in each trigger cycle.
+ */
+var loop1_comp_enabled = 0;
+var loop8_comp_enabled = 0;
+var loop32_comp_enabled = 0;
+var loop1_player_enabled = 0;
+var loop8_player_enabled = 0;
+var loop32_player_enabled = 0;
+var loop8_neutral_enabled = 0;
+var loop1_normal_enabled = 0;
+var loop8_normal_enabled = 0;
+var loop32_normal_enabled = 0;
+var loopdeath_enabled = 0;
+
+var loop1_unit_enabled = 0;
+var loop8_unit_enabled = 0;
+var loop32_unit_enabled = 0;
+
+const loopdeath_player_units = UnitGroup(1700);
+const loopdeath_comp_units = UnitGroup(1700);
+
+function mutator_init() {
+	if(mutatorEnabled[2]) { // slim_pickings
+		loop8_player_enabled = 1;
+		loop1_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		loop32_comp_enabled = 1;
+		slim_pickings.init();
+	}
+	if(mutatorEnabled[3]) { // order_cost
+		loop1_normal_enabled = 1;
+		order_cost.init();
+	}
+	if(mutatorEnabled[4]) { // laser_drill
+		loop1_normal_enabled = 1;
+		laser_drill.init();
+	}
+	if(mutatorEnabled[5]) { // purifier_beam
+		loop8_normal_enabled = 1;
+		purifier_beam.init();
+	}
+	if(mutatorEnabled[6]) { // just_die
+		loopdeath_enabled = 1;
+		just_die.init();
+	}
+	if(mutatorEnabled[7]) { // fear
+		loop8_player_enabled = 1;
+		fear.init();
+	}
+	if(mutatorEnabled[8]) { // nukes
+		loop32_normal_enabled = 1;
+		nukes.init();
+	}
+	if(mutatorEnabled[9]) { // self_destruct
+		loopdeath_enabled = 1;
+		self_destruct.init();
+	}
+	if(mutatorEnabled[10]) { // all_cloaked
+		loop32_normal_enabled = 1;
+		all_cloaked.init();
+	}
+	if(mutatorEnabled[11]) { // mineral_shield
+		loop8_neutral_enabled = 1;
+		loop32_normal_enabled = 1;
+		mineral_shield.init();
+	}
+	if(mutatorEnabled[12]) { // double_edged
+		loop8_player_enabled = 1;
+		double_edged.init();
+	}
+	if(mutatorEnabled[13]) { // silence
+		loopdeath_enabled = 1;
+		loop8_player_enabled = 1;
+		loop8_normal_enabled = 1;
+		silence.init();
+	}
+	if(mutatorEnabled[14]) { // mad
+		loopdeath_enabled = 1;
+		mad.init();
+	}
+	if(mutatorEnabled[15]) { // void_rift
+		loop32_normal_enabled = 1;
+		loop32_comp_enabled = 1;
+		void_rift.init();
+	}
+	if(mutatorEnabled[16]) { // random_spell
+		loop1_normal_enabled = 1;
+		random_spell.init();
+	}
+	if(mutatorEnabled[17]) { // transmutation
+		loop8_player_enabled = 1;
+		transmutation.init();
+	}
+	if(mutatorEnabled[18]) { // shared_supply
+		loop1_normal_enabled = 1;
+		shared_supply.init();
+	}
+	if(mutatorEnabled[19]) { // diffusion
+		diffusion.init();
+	}
+	if(mutatorEnabled[20]) { // plague
+		loopdeath_enabled = 1;
+		loop8_player_enabled = 1;
+		loop8_normal_enabled = 1;
+		plague.init();
+	}
+	if(mutatorEnabled[21]) { // avenger
+		loopdeath_enabled = 1;
+		loop8_player_enabled = 1;
+		loop8_normal_enabled = 1;
+		avenger.init();
+	}
+	if(mutatorEnabled[22]) { // blink
+		loop8_comp_enabled = 1;
+		loop8_player_enabled = 1;
+		blink.init();
+	}
+	if(mutatorEnabled[23]) { // fatal_attraction
+		loopdeath_enabled = 1;
+		fatal_attraction.init();
+	}
+	if(mutatorEnabled[24]) { // propagator
+		loop8_player_enabled = 1;
+		loop32_normal_enabled = 1;
+		propagator.init();
+	}
+	if(mutatorEnabled[25]) { // death_flame
+		loopdeath_enabled = 1;
+		death_flame.init();
+	}
+	if(mutatorEnabled[26]) { // photon_overload
+		loop8_normal_enabled = 1;
+		loop8_player_enabled = 1;
+		photon_overload.init();
+	}
+	if(mutatorEnabled[27]) { // halloween
+		loop8_normal_enabled = 1;
+		halloween.init();
+	}
+	if(mutatorEnabled[28]) { // critter_hunt
+		loop1_normal_enabled = 1;
+		loop8_normal_enabled = 1;
+		critter_hunt.init();
+	}
+	if(mutatorEnabled[29]) { // gift_exchange
+		loop1_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		gift_exchange.init();
+	}
+	if(mutatorEnabled[30]) { // lucky_envelopes
+		loop1_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		lucky_envelopes.init();
+	}
+	if(mutatorEnabled[31]) { // darkness
+		loop1_normal_enabled = 1;
+		darkness.init();
+	}
+	if(mutatorEnabled[32]) { // speed_freaks
+		loop8_comp_enabled = 1;
+		loop8_player_enabled = 1;
+		speed_freaks.init();
+	}
+	if(mutatorEnabled[33]) { // boom_bots
+		loop8_normal_enabled = 1;
+		boom_bots.init();
+	}
+	if(mutatorEnabled[34]) { // drop_pods
+		loop32_player_enabled = 1;
+		loop1_normal_enabled = 1;
+		drop_pods.init();
+	}
+	if(mutatorEnabled[35]) { // broodlings
+		loopdeath_enabled = 1;
+		broodlings.init();
+	}
+	if(mutatorEnabled[36]) { // short_sighted
+		short_sighted.init();
+	}
+	if(mutatorEnabled[37]) { // concussive_attacks
+		loop8_player_enabled = 1;
+		concussive_attacks.init();
+	}
+	if(mutatorEnabled[38]) { // minesweeper
+		loop32_normal_enabled = 1;
+		minesweeper.init();
+	}
+	if(mutatorEnabled[39]) { // life_leech
+		loop8_player_enabled = 1;
+		life_leech.init();
+	}
+	if(mutatorEnabled[40]) { // missiles
+		loop8_comp_enabled = 1;
+		loop32_normal_enabled = 1;
+		missiles.init();
+	}
+	if(mutatorEnabled[41]) { // vertigo
+		loop32_normal_enabled = 1;
+		vertigo.init();
+	}
+	if(mutatorEnabled[42]) { // void_reanimator
+		loop8_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		void_reanimator.init();
+	}
+	if(mutatorEnabled[43]) { // storm_hero
+		loop8_normal_enabled = 1;
+		storm_hero.init();
+	}
+	if(mutatorEnabled[44]) { // takeover
+		loopdeath_enabled = 1;
+		loop32_player_enabled = 1;
+		loop1_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		takeover.init();
+	}
+	if(mutatorEnabled[45]) { // orbital_strike
+		loop32_player_enabled = 1;
+		loop1_normal_enabled = 1;
+		orbital_strike.init();
+	}
+	if(mutatorEnabled[46]) { // naughty_list
+		loop8_player_enabled = 1;
+		naughty_list.init();
+	}
+	if(mutatorEnabled[47]) { // kill_bots
+		loop8_comp_enabled = 1;
+		loop32_normal_enabled = 1;
+		kill_bots.init();
+	}
+	if(mutatorEnabled[48]) { // lava
+		loop1_normal_enabled = 1;
+		lava.init();
+	}
+	if(mutatorEnabled[49]) { // time_rift
+		loop1_normal_enabled = 1;
+		loop32_normal_enabled = 1;
+		time_rift.init();
+	}
+	if(mutatorEnabled[50]) { // self_matrix
+		loop8_player_enabled = 1;
+		self_matrix.init();
+	}
+	if(mutatorEnabled[51]) { // twister
+		loop8_normal_enabled = 1;
+		twister.init();
+	}
+	if(mutatorEnabled[52]) { // rapid_fire
+		loop8_player_enabled = 1;
+		rapid_fire.init();
+	}
+	if(mutatorEnabled[53]) { // outbreak
+		loop32_normal_enabled = 1;
+		outbreak.init();
+	}
+	if(mutatorEnabled[54]) { // walking_infested
+		loopdeath_enabled = 1;
+		loop32_normal_enabled = 1;
+		walking_infested.init();
+	}
+
+	if(loop1_player_enabled || loop1_comp_enabled) {
+		loop1_unit_enabled = 1;
+	}
+	if(loop8_player_enabled || loop8_comp_enabled || loop8_neutral_enabled) {
+		loop8_unit_enabled = 1;
+	}
+	if(loop32_player_enabled || loop32_comp_enabled) {
+		loop32_unit_enabled = 1;
+	}
+}
+
+function loop1_comp_act(epd, player) {
+}
+function loop8_comp_act(epd, player) {
+	if(!(MemoryXEPD(epd + 77 / 4, AtLeast, 1 * 256, 0xFF00) && MemoryEPD(epd + 8 / 4, AtLeast, 1))) {
+		return;
+	}
+	if(mutatorEnabled[22]) { // blink
+		blink.loop8_comp(epd, player);
+	}
+	if(mutatorEnabled[32]) { // speed_freaks
+		speed_freaks.loop8_comp(epd, player);
+	}
+	if(mutatorEnabled[40]) { // missiles
+		missiles.loop8_comp(epd, player);
+	}
+	if(mutatorEnabled[47]) { // kill_bots
+		kill_bots.loop8_comp(epd, player);
+	}
+}
+function loop32_comp_act(epd, player) {
+	if(!(MemoryXEPD(epd + 77 / 4, AtLeast, 1 * 256, 0xFF00) && MemoryEPD(epd + 8 / 4, AtLeast, 1))) {
+		return;
+	}
+	if(mutatorEnabled[2]) { // slim_pickings
+		slim_pickings.loop32_comp(epd, player);
+	}
+	if(mutatorEnabled[15]) { // void_rift
+		void_rift.loop32_comp(epd, player);
+	}
+}
+
+function loop1_player_act(epd, player) {
+}
+function loop8_player_act(epd, player) {
+	if(!(MemoryXEPD(epd + 77 / 4, AtLeast, 1 * 256, 0xFF00) && MemoryEPD(epd + 8 / 4, AtLeast, 1))) {
+		return;
+	}
+	ai_loop.loop8_player(epd, player);
+	if(mutatorEnabled[2]) { // slim_pickings
+		slim_pickings.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[7]) { // fear
+		fear.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[12]) { // double_edged
+		double_edged.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[13]) { // silence
+		silence.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[17]) { // transmutation
+		transmutation.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[20]) { // plague
+		plague.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[21]) { // avenger
+		avenger.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[22]) { // blink
+		blink.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[24]) { // propagator
+		propagator.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[26]) { // photon_overload
+		photon_overload.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[32]) { // speed_freaks
+		speed_freaks.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[37]) { // concussive_attacks
+		concussive_attacks.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[39]) { // life_leech
+		life_leech.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[46]) { // naughty_list
+		naughty_list.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[50]) { // self_matrix
+		self_matrix.loop8_player(epd, player);
+	}
+	if(mutatorEnabled[52]) { // rapid_fire
+		rapid_fire.loop8_player(epd, player);
+	}
+}
+function loop32_player_act(epd, player) {
+	if(!(MemoryXEPD(epd + 77 / 4, AtLeast, 1 * 256, 0xFF00) && MemoryEPD(epd + 8 / 4, AtLeast, 1))) {
+		return;
+	}
+	if(mutatorEnabled[34]) { // drop_pods
+		drop_pods.loop32_player(epd, player);
+	}
+	if(mutatorEnabled[44]) { // takeover
+		takeover.loop32_player(epd, player);
+	}
+	if(mutatorEnabled[45]) { // orbital_strike
+		orbital_strike.loop32_player(epd, player);
+	}
+}
+function loop8_neutral_act(epd) {
+	if(mutatorEnabled[11]) { // mineral_shield
+		mineral_shield.loop8_neutral(epd);
+	}
+}
+
+function unit_loop(depth) {
+	if(depth == 32) {
+		foreach(ptr, epd : EUDLoopUnit2()) {
+			const cm = EPDCUnitMap(epd);
+			if(cm.hp < 128 || cm.orderID == 0) {
+				continue;
+			}
+			epdswitch(epd + 100 / 4, 0xFF) { // unit type
+				case 4, 6, 18, 24, 26, 31, 33, 35, 36, 59, 73, 85, 101, 194, 195, 196, 197, 198, 199:
+					continue;
+			}
+			epdswitch(epd + 76 / 4, 0xFF) { // player
+				case 0, 1, 2, 3, 4, 5:
+					if(loop1_player_enabled) {
+						loop1_player_act(epd, cm.playerID);
+					}
+					if(loop8_player_enabled) {
+						loop8_player_act(epd, cm.playerID);
+					}
+					if(loop32_player_enabled) {
+						loop32_player_act(epd, cm.playerID);
+					}
+					break;
+				case 6:
+					if(loop1_comp_enabled) {
+						loop1_comp_act(epd, cm.playerID);
+					}
+					if(loop8_comp_enabled) {
+						loop8_comp_act(epd, cm.playerID);
+					}
+					if(loop32_comp_enabled) {
+						loop32_comp_act(epd, cm.playerID);
+					}
+					break;
+			}
+		}
+	}
+	else if(depth == 8) {
+		foreach(ptr, epd : EUDLoopUnit2()) {
+			const cm = EPDCUnitMap(epd);
+			if(cm.hp < 128 || cm.orderID == 0) {
+				continue;
+			}
+			epdswitch(epd + 100 / 4, 0xFF) { // unit type
+				case 4, 6, 18, 24, 26, 31, 33, 35, 36, 59, 73, 85, 101, 194, 195, 196, 197, 198, 199:
+					continue;
+			}
+			epdswitch(epd + 76 / 4, 0xFF) { // player
+				case 0, 1, 2, 3, 4, 5:
+					if(loop1_player_enabled) {
+						loop1_player_act(epd, cm.playerID);
+					}
+					if(loop8_player_enabled) {
+						loop8_player_act(epd, cm.playerID);
+					}
+					break;
+				case 6:
+					if(loop1_comp_enabled) {
+						loop1_comp_act(epd, cm.playerID);
+					}
+					if(loop8_comp_enabled) {
+						loop8_comp_act(epd, cm.playerID);
+					}
+					break;
+				case 11:
+					if(loop8_neutral_enabled) {
+						loop8_neutral_act(epd);
+					}
+					break;
+			}
+		}
+	}
+	else {
+		foreach(ptr, epd : EUDLoopUnit2()) {
+			const cm = EPDCUnitMap(epd);
+			if(cm.hp < 128 || cm.orderID == 0) {
+				continue;
+			}
+			epdswitch(epd + 100 / 4, 0xFF) { // unit type
+				case 4, 6, 18, 24, 26, 31, 33, 35, 36, 59, 73, 85, 101, 194, 195, 196, 197, 198, 199:
+					continue;
+			}
+			epdswitch(epd + 76 / 4, 0xFF) { // player
+				case 0, 1, 2, 3, 4, 5:
+					loop1_player_act(epd, cm.playerID);
+					break;
+				case 6:
+					loop1_comp_act(epd, cm.playerID);
+					break;
+			}
+		}
+	}
+}
+
+function loop1_normal() {
+	if(mutatorEnabled[2]) { // slim_pickings
+		slim_pickings.loop1_normal();
+	}
+	if(mutatorEnabled[3]) { // order_cost
+		order_cost.loop1_normal();
+	}
+	if(mutatorEnabled[4]) { // laser_drill
+		laser_drill.loop1_normal();
+	}
+	if(mutatorEnabled[16]) { // random_spell
+		random_spell.loop1_normal();
+	}
+	if(mutatorEnabled[18]) { // shared_supply
+		shared_supply.loop1_normal();
+	}
+	if(mutatorEnabled[28]) { // critter_hunt
+		critter_hunt.loop1_normal();
+	}
+	if(mutatorEnabled[29]) { // gift_exchange
+		gift_exchange.loop1_normal();
+	}
+	if(mutatorEnabled[30]) { // lucky_envelopes
+		lucky_envelopes.loop1_normal();
+	}
+	if(mutatorEnabled[31]) { // darkness
+		darkness.loop1_normal();
+	}
+	if(mutatorEnabled[34]) { // drop_pods
+		drop_pods.loop1_normal();
+	}
+	if(mutatorEnabled[44]) { // takeover
+		takeover.loop1_normal();
+	}
+	if(mutatorEnabled[45]) { // orbital_strike
+		orbital_strike.loop1_normal();
+	}
+	if(mutatorEnabled[48]) { // lava
+		lava.loop1_normal();
+	}
+	if(mutatorEnabled[49]) { // time_rift
+		time_rift.loop1_normal();
+	}
+}
+function loop8_normal() {
+	if(mutatorEnabled[5]) { // purifier_beam
+		purifier_beam.loop8_normal();
+	}
+	if(mutatorEnabled[13]) { // silence
+		silence.loop8_normal();
+	}
+	if(mutatorEnabled[20]) { // plague
+		plague.loop8_normal();
+	}
+	if(mutatorEnabled[21]) { // avenger
+		avenger.loop8_normal();
+	}
+	if(mutatorEnabled[26]) { // photon_overload
+		photon_overload.loop8_normal();
+	}
+	if(mutatorEnabled[27]) { // halloween
+		halloween.loop8_normal();
+	}
+	if(mutatorEnabled[28]) { // critter_hunt
+		critter_hunt.loop8_normal();
+	}
+	if(mutatorEnabled[33]) { // boom_bots
+		boom_bots.loop8_normal();
+	}
+	if(mutatorEnabled[42]) { // void_reanimator
+		void_reanimator.loop8_normal();
+	}
+	if(mutatorEnabled[43]) { // storm_hero
+		storm_hero.loop8_normal();
+	}
+	if(mutatorEnabled[51]) { // twister
+		twister.loop8_normal();
+	}
+}
+function loop32_normal() {
+	if(mutatorEnabled[2]) { // slim_pickings
+		slim_pickings.loop32_normal();
+	}
+	if(mutatorEnabled[8]) { // nukes
+		nukes.loop32_normal();
+	}
+	if(mutatorEnabled[10]) { // all_cloaked
+		all_cloaked.loop32_normal();
+	}
+	if(mutatorEnabled[11]) { // mineral_shield
+		mineral_shield.loop32_normal();
+	}
+	if(mutatorEnabled[15]) { // void_rift
+		void_rift.loop32_normal();
+	}
+	if(mutatorEnabled[24]) { // propagator
+		propagator.loop32_normal();
+	}
+	if(mutatorEnabled[29]) { // gift_exchange
+		gift_exchange.loop32_normal();
+	}
+	if(mutatorEnabled[30]) { // lucky_envelopes
+		lucky_envelopes.loop32_normal();
+	}
+	if(mutatorEnabled[38]) { // minesweeper
+		minesweeper.loop32_normal();
+	}
+	if(mutatorEnabled[40]) { // missiles
+		missiles.loop32_normal();
+	}
+	if(mutatorEnabled[41]) { // vertigo
+		vertigo.loop32_normal();
+	}
+	if(mutatorEnabled[42]) { // void_reanimator
+		void_reanimator.loop32_normal();
+	}
+	if(mutatorEnabled[44]) { // takeover
+		takeover.loop32_normal();
+	}
+	if(mutatorEnabled[47]) { // kill_bots
+		kill_bots.loop32_normal();
+	}
+	if(mutatorEnabled[49]) { // time_rift
+		time_rift.loop32_normal();
+	}
+	if(mutatorEnabled[53]) { // outbreak
+		outbreak.loop32_normal();
+	}
+	if(mutatorEnabled[54]) { // walking_infested
+		walking_infested.loop32_normal();
+	}
+}
+
+function loopdeath_add() {
+	foreach(ptr, epd : EUDLoopNewUnit()) {
+		const cunit = EPDCUnitMap(epd);
+		if (cunit.playerID < 6) {
+			loopdeath_player_units.add(epd);
+		}
+		else if (cunit.playerID < 7) {
+			loopdeath_comp_units.add(epd);
+		}
+	}
+}
+function loopdeath_comp_act(player, ut, x, y, epd) {
+	if(mutatorEnabled[20]) { // plague
+		plague.loopdeath_comp(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[21]) { // avenger
+		avenger.loopdeath_comp(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[23]) { // fatal_attraction
+		fatal_attraction.loopdeath_comp(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[25]) { // death_flame
+		death_flame.loopdeath_comp(player, ut, x, y, epd);
+	}
+}
+function loopdeath_player_act(player, ut, x, y, epd) {
+	if(mutatorEnabled[6]) { // just_die
+		just_die.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[9]) { // self_destruct
+		self_destruct.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[13]) { // silence
+		silence.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[14]) { // mad
+		mad.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[20]) { // plague
+		plague.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[23]) { // fatal_attraction
+		fatal_attraction.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[25]) { // death_flame
+		death_flame.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[35]) { // broodlings
+		broodlings.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[44]) { // takeover
+		takeover.loopdeath_player(player, ut, x, y, epd);
+	}
+	if(mutatorEnabled[54]) { // walking_infested
+		walking_infested.loopdeath_player(player, ut, x, y, epd);
+	}
+}
+function loopdeath_comp() {
+	const v = getcurpl();
+	foreach(unit : loopdeath_comp_units.cploop) {
+		foreach(dead : unit.dying) {
+			dead.move_cp(100 / 4);  // UnitType
+                	const ut = bread_cp(0, 0);
+			dead.move_cp(0x4C / 4);  // Owner
+                	const owner = bread_cp(0, 0);
+                	dead.move_cp(0x28 / 4);  // Unit Position
+                	const x, y = posread_cp(0);
+			dead.move_cp(0);  // LastAttackingPlayer
+                	const epd = getcurpl();
+                	loopdeath_comp_act(owner, ut, x, y, epd);
+		}
+	}
+	setcurpl(v);
+}
+function loopdeath_player() {
+	const v = getcurpl();
+	foreach(unit : loopdeath_player_units.cploop) {
+		foreach(dead : unit.dying) {
+			dead.move_cp(100 / 4);  // UnitType
+			const ut = bread_cp(0, 0);
+			dead.move_cp(0x4C / 4);  // Owner
+			const owner = bread_cp(0, 0);
+			dead.move_cp(0x28 / 4);  // Unit Position
+			const x, y = posread_cp(0);
+			dead.move_cp(0);  // LastAttackingPlayer
+			const epd = getcurpl();
+			loopdeath_player_act(owner, ut, x, y, epd);
+		}
+	}
+	setcurpl(v);
+}
+
+var unit_loop8_delay = 0;
+var unit_loop32_delay = 0;
+function loop_caller() {
+	var depth = 1;
+	if(loop1_normal_enabled) {
+		loop1_normal();
+	}
+
+	unit_loop8_delay++;
+	if(unit_loop8_delay >= 8) {
+		unit_loop8_delay = 0;
+		depth = 8;
+	}
+
+	unit_loop32_delay++;
+	if(unit_loop32_delay >= 32) {
+		unit_loop32_delay = 0;
+		depth = 32;
+	}
+	
+	if(loopdeath_enabled) {
+		loopdeath_add();
+		loopdeath_comp();
+		loopdeath_player();
+	}
+
+	if(loop1_unit_enabled) {
+		unit_loop(depth);
+	}
+	else if(depth >= 8 && loop8_unit_enabled) {
+		unit_loop(depth);
+	}
+	else if(depth == 32 && loop32_unit_enabled) {
+		unit_loop(depth);
+	}
+
+	if(depth >= 8) {
+		if(loop8_normal_enabled) {
+			loop8_normal();
+		}
+	}
+	if(depth == 32) {
+		if(loop32_normal_enabled) {
+			loop32_normal();
+		}
+	}
+}
+
+var daily_mutator_seed;
+const mutators_to_activate = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54];
+var mutators_to_activate_count = 53;
+function daily_mutation(target_count) {
+	const _seed = daily_mutator_seed;
+	for(var i = 0; i < target_count; i++) {
+		const mut_idx = daily_mutator_seed % mutators_to_activate_count;
+		if(i >= 1) {
+			daily_mutator_seed /= 128;
+		}
+		const mut = mutators_to_activate[mut_idx];
+		mutators_to_activate[mut_idx] = mutators_to_activate[mutators_to_activate_count - 1];
+		mutators_to_activate_count -= 1;
+		if(mutatorEnabled[mut] == 0) {
+			total_mutators_enabled += 1;
+		}
+		mutatorEnabled[mut] = 1;
+	}
+	daily_mutator_seed = _seed;
+}
+
+function daily_settings() {
+	daily_seed.daily_seed();
+
+	ai_main.randomly_set_comps();
+	resrand.resrand();
+	
+	// 16bit is not enough for 3 mutators (54x53x52). if we need more, we need another rand
+	daily_mutator_seed = dwrand() & 0x7FFFFFFF;
+}
+
+function random_settings() {
+	is_random_mode = 1;
+	utils.robust_randomize();
+
+	ai_main.randomly_set_comps();
+	resrand.resrand();
+	
+	daily_mutator_seed = dwrand() & 0x7FFFFFFF;
+}
+
+function toggle_mutator(mut) {
+	if(mutatorEnabled[mut] == 0) {
+		total_mutators_enabled += 1;
+		mutatorEnabled[mut] = 1;
+	}
+	else {
+		total_mutators_enabled -= 1;
+		mutatorEnabled[mut] = 0;
+	}
+}
+
+function set_to_custom() {
+	is_custom_mutation = 1;
+}
+
+function debug_selection() {
+	const ptr, epd = cunitepdread_epd(EPD(0x006284B8));
+	if(ptr > 0) {
+		const cm = EPDCUnitMap(epd);
+		printAt(0, "time: {} order: {} & {} order2: {}, seed: {}, mutators: {}",
+			wread(5822200), cm.orderID, cm.orderState, cm.secondaryOrder,
+			daily_mutator_seed, total_mutators_enabled
+		);
+	}
+}
+
+var debug_is_unit_printed = 0;
+const race_keywords = [$T("Z"), $T("T"), $T("P")];
+const color_keywords = [$T("\x1D"), $T("\x07"), $T("\x06"), $T("\x15")];
+function compobs_debug() {
+	once {
+		race_keywords[0] = EPD(GetMapStringAddr(race_keywords[0]));
+		race_keywords[1] = EPD(GetMapStringAddr(race_keywords[1]));
+		race_keywords[2] = EPD(GetMapStringAddr(race_keywords[2]));
+		color_keywords[0] = EPD(GetMapStringAddr(color_keywords[0]));
+		color_keywords[1] = EPD(GetMapStringAddr(color_keywords[1]));
+		color_keywords[2] = EPD(GetMapStringAddr(color_keywords[2]));
+	}
+	const v = getcurpl();
+	setcurpl(P8);
+	printAllAt(0, "\x1ddate: {}, time: {} ({}), units: {}, seed: {}, mutators: {}, supply: \x08{} \x0e{} \x0f{} \x10{} \x11{} \x15{}",
+		dwread(0x6D0F38),
+		dwread(0x57F23C),
+		wread(0x58D6F8),
+		wread(0x6283F0),
+		daily_mutator_seed,
+		total_mutators_enabled,
+		(wread_epd(EPD(0x00582174), 0) + wread_epd(EPD(0x00582204), 0) + wread_epd(EPD(0x00582294), 0)) / 2,
+		(wread_epd(EPD(0x00582178), 0) + wread_epd(EPD(0x00582208), 0) + wread_epd(EPD(0x00582298), 0)) / 2,
+		(wread_epd(EPD(0x0058217c), 0) + wread_epd(EPD(0x0058220c), 0) + wread_epd(EPD(0x0058229c), 0)) / 2,
+		(wread_epd(EPD(0x00582180), 0) + wread_epd(EPD(0x00582210), 0) + wread_epd(EPD(0x005822a0), 0)) / 2,
+		(wread_epd(EPD(0x00582184), 0) + wread_epd(EPD(0x00582214), 0) + wread_epd(EPD(0x005822a4), 0)) / 2,
+		(wread_epd(EPD(0x00582188), 0) + wread_epd(EPD(0x00582218), 0) + wread_epd(EPD(0x005822a8), 0)) / 2
+	);
+
+	// ob controls
+	ob_controls.loop_obs();
+
+	if(MemoryX(0x006d10b0, Exactly, 0, 65280) && getuserplayerid() >= 128) { // Type2
+		setcurpl(v);
+		return;
+	}
+
+	const ptr, epd = cunitepdread_epd(EPD(0x628638));
+	if(ptr > 0) {
+		const cm = EPDCUnitMap(epd);
+		printAllAt(2, "\x1dunit: {} owner: {} status: {:x} order: {} & {} order2: {} energy: {}",
+			cm.unitType,
+			cm.playerID,
+			dwread_epd(epd + 220 / 4),
+			cm.orderID, 
+			cm.orderState,
+			cm.secondaryOrder,
+			cm.energy / 256
+		);
+		debug_is_unit_printed = 1;
+	}
+	else {
+		if(debug_is_unit_printed) {
+			debug_is_unit_printed = 0;
+			printAt(2, "");
+		}
+	}
+	setcurpl(v);
+}
+
+function onPluginStart() {
+	GetGlobalStringBuffer();
+	initialize.handle_auto_comp();
+	constants.init();
+	utils.disable_dark_archon_double_race();
+	initialize.create_mode_selector();
+	initialize.handle_comp_obs();
+	initialize.set_alliances();
+}
+
+var loop8Var = 0;
+var loop32Var = 0;
+function beforeTriggerExec() {
+	
+	// Turbo
+	SetMemory(0x6509A0, SetTo, 0);
+	
+	if(Switch("game_start", Cleared)) {
+		once {
+			// unfog
+			SetMemory(5361304, SetTo, 2);
+		}
+		menu.menu();
+		return;
+	}
+	
+	once {
+		// time travel back to the big bang
+		SetMemory(5822200, SetTo, 0);
+		
+		// unfog again
+		SetMemory(5361304, SetTo, 2);
+
+		// daily settings
+		if(Switch("game_random", Set) || is_custom_mutation) {
+			random_settings();
+		}
+		else {
+			daily_settings();
+		}
+		
+		ai_loop.p7_init();
+		
+		// hard & mutate
+		if(Switch("game_hard", Set)) {
+			hard_mode = 1;
+			ai_loop.hard_mode();
+			daily_mutation(3);
+		}
+		else if(is_custom_mutation == 0) {
+			daily_mutation(2);
+		}
+		mutator_init();
+		
+		// send back player units
+		utils.give_back_units();
+		RemoveUnit(101, Force1);
+		RemoveUnit(101, Force2);
+		RemoveUnit(101, P8);
+		
+		resrand.startup_res();
+        utils.robust_randomize();
+
+        if(MemoryX(0x006d10b0, Exactly, 0, 65280) && MemoryX(0x0057efe4, Exactly, 2, 255)) {
+            // fix observer rand
+            srand(dwread(0x51CE8C));
+        }
+		
+		if(!is_custom_mutation) {
+			messages.generate_welcome();
+		}
+		else {
+			messages.simple_welcome();
+		}
+		messages.leaderboard_kills();
+	}
+
+	// comp obs
+	if(Switch("game_compobs", Set)) {
+		compobs_debug();
+	}
+	else if(getuserplayerid() >= 128) {
+		// regular obs
+		ob_controls.regular_ob_controls();
+	}
+	
+	once(ElapsedTime(AtLeast, 2)) {
+		if(constants.has_computer()) {
+			ai_main.spawn();
+		}
+		initialize.create_anti_rush();
+	}
+	once(ElapsedTime(AtLeast, 3)) {
+		if(!is_custom_mutation) {
+			messages.generate_mission_objectives();
+		}
+		else {
+			messages.simple_mission_objectives();
+		}
+	}
+	once(ElapsedTime(AtLeast, 4)) {
+		if(constants.has_computer()) {
+			ai_main.run_ai();
+			loop8_player_enabled = 1;
+			loop8_unit_enabled = 1;
+		}
+	}
+	
+	fix_ccmu.attempt_to_fix_ccmu();
+	
+	// clear buffer
+	utils.clear_unit_buffer();
+	
+	// unit loop
+	loop_caller();
+
+	loop8Var++;
+	if(loop8Var >= 8) {
+		ai_loop.loop8_normal();
+		loop8Var = 0;
+	}
+	
+	loop32Var++;
+	if(loop32Var >= 32) {
+		loop32Var = 0;
+		utils.victory_check();
+		utils.move_critter();
+		once(Command(Force1, AtLeast, 1, "(buildings)") && Command(Force2, AtLeast, 1, "(buildings)") && Command(P10, AtMost, 0, "(buildings)")) {
+			SetSwitch("comp_ready", Set);
+		}
+	}
+}

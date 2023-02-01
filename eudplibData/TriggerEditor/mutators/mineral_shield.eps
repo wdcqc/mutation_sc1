@@ -1,0 +1,44 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		SetMemory(6694312, SetTo, 12800),
+		SetMemory(6701784, SetTo, 1140850689),
+		SetMemoryX(6699060, SetTo, 1310720, 16711680),
+		SetMemory(6691960, SetTo, 1310756),
+		SetMemory(6691964, SetTo, 1245219),
+		SetMemory(6695608, SetTo, 2031617),
+		SetMemoryX(6709928, SetTo, 362, 65535),
+		SetMemory(6745476, SetTo, 250),
+		SetMemoryX(6697444, SetTo, 655360, 16711680)
+	);
+}
+
+function loop8_neutral(epd) {
+	if(ElapsedTime(AtLeast, 360)) {
+		const cm = EPDCUnitMap(epd);
+		if(cm.unitType == 177 && rand() < 80) {
+			setloc_epd("shared", epd + 40 / 4);
+			dilateloc("shared", 16, 12);
+			RemoveUnitAt(All, 101, "shared", P9);
+			if(Bring(P7, AtMost, 0, "Mature Chrysalis", "shared")) {
+				SetMemoryX(6725520, SetTo, 1048576, 16711680);
+				CreateUnit(1, "Mature Crysalis", "shared", P7);
+				SetMemoryX(6725520, SetTo, 589824, 16711680);
+			}
+		}
+	}
+}
+
+var nextHPIncrease = 480;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, nextHPIncrease)) {
+		SetMemory(6694312, Add, 1280);
+		ModifyUnitHitPoints(All, 150, P7, "Anywhere", 100);
+		nextHPIncrease += 180;
+		if(Switch("game_hard", Set)) {
+			nextHPIncrease -= 120;
+		}
+	}
+}

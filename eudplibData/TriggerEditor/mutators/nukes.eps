@@ -1,0 +1,73 @@
+import PluginVariables as msqcvar;
+import utils;
+
+var silo;
+var ghost;
+function init() {
+	// unit 121
+	DoActions(
+		SetMemoryX(6697648, SetTo, 2816, 65280),
+		SetMemory(6701668, SetTo, 1140850721),
+		SetMemoryX(6702448, SetTo, 23296, 65280),
+		SetMemory(6691728, SetTo, 65537),
+		SetMemory(6691732, SetTo, 65537),
+		SetMemory(6695492, SetTo, 0),
+		SetMemoryX(6690312, SetTo, 131072, -65536),
+		SetMemoryX(6699032, SetTo, 512, 65280),
+		SetMemoryX(6693136, SetTo, 512, 65280),
+		
+		// P9 supply
+		SetMemory(5775860, SetTo, 5000),
+		SetMemory(5775956, SetTo, 5000),
+		
+		// Silo attributes
+		SetMemory(6695440, SetTo, 65537),
+		SetMemoryX(6697636, SetTo, 0, 255),
+		SetMemoryX(6701616, SetTo, 0, 2)
+	);
+	
+	silo = epdread_epd(EPD(0x628438));
+	CreateUnitWithProperties(1, 108, "nuke_silo", P7, UnitProperty(invincible=True));
+	GiveUnits(All, 108, P7, "nuke_silo", P9);
+	ghost = epdread_epd(EPD(0x628438));
+	CreateUnitWithProperties(1, 121, "nuke_silo", P7, UnitProperty(intransit=True,invincible=True));
+	GiveUnits(All, 121, P7, "nuke_silo", P9);
+	SetMemoryEPD(ghost + 52 / 4, SetTo, 17067);
+	SetMemoryXEPD(ghost + 72 / 4, SetTo, 8533, 0x0000FFFF);
+	
+	DoActions(
+		SetMemory(6695440, SetTo, 4194368),
+		SetMemoryX(6697636, SetTo, 8, 255),
+		SetMemoryX(6701616, SetTo, 2, 2)
+	);
+}
+
+var next_nuke_time = 30;
+function loop32_normal() {
+	if(MemoryEPD(silo + 212/4, Exactly, 1)) { // nuke is loaded
+		if(MemoryXEPD(ghost + 77/4, Exactly, 23 * 256, 0x0000ff00)
+		&& ElapsedTime(AtLeast, next_nuke_time)) { // is idle
+			const rand_x, rand_y = utils.get_neutral_loc();
+			SetMemoryXEPD(ghost + 77 / 4, SetTo, 128 * 256 + 0 * 65536, 0x00FFFF00);
+			SetMemoryEPD(ghost + 88 / 4, SetTo, rand_x + rand_y * 65536);
+			next_nuke_time += 30;
+		}
+	}
+	else if(MemoryEPD(silo + 208/4, Exactly, 0)
+	&& MemoryXEPD(silo + 166/4, Exactly, 23 * 65536, 0x00FF0000)) { // make a nuke
+		SetMemoryEPD(silo + 152 / 4, SetTo, 14 + 228 * 65536);
+		SetMemoryEPD(silo + 156 / 4, SetTo, 228 + 228 * 65536);
+		SetMemoryXEPD(silo + 160 / 4, SetTo, 228, 0x0000FFFF);
+		SetMemoryXEPD(silo + 166 / 4, SetTo, 0 + 38 * 65536, 0x00FF00FF);
+		SetMemoryXEPD(silo + 77 / 4, SetTo, 124 * 256 + 1 * 65536, 0x00FFFF00);
+	}
+	else if(MemoryEPD(silo + 208/4, AtLeast, 1)) {
+		const nuke_unit, nuke_epd = cunitepdread_epd(silo + 208 / 4);
+		if(nuke_unit > 0) {
+			const nuke_cm = EPDCUnitMap(nuke_epd);
+			if(nuke_cm.remainingBuildTime > 10) {
+				nuke_cm.remainingBuildTime = 3;
+			}
+		}
+	}
+}

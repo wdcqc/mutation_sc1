@@ -1,0 +1,36 @@
+import PluginVariables as msqcvar;
+import utils;
+import main;
+
+const resurrectable = [1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1,0,1,0,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,0,1,0,1,1,1,1,0,1,0,0,0,0,0,1,1,1,0,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var prob = 12500;
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		prob = 25000;
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(ut < 106 && player < 6 && resurrectable[ut]) {
+		const cm = EPDCUnitMap(epd);
+		const lap = cm.lastAttackingPlayer;
+		if(lap < 4 && rand() < prob) {
+			if(main.mutatorEnabled[1] && rand() > 32768) { // polarity
+				return;
+			}
+			setloc($L("shared"), x, y);
+			dilateloc($L("shared"), 16, 16);
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+			CreateUnit(1, ut, "shared", player);
+			if(lap < 8) {
+				MoveLocation("target", "(buildings)", lap, "Anywhere");
+				utils.order_computer(ut, player, "shared", Patrol, "target");
+			}
+			if(Deaths(player, AtLeast, 1, ut)) {
+				SetDeaths(player, Subtract, 1, ut);
+			}
+		}
+	}
+}
+

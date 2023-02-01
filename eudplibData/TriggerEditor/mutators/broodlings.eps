@@ -1,0 +1,28 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const death_summons = utils.death_summons;
+
+function init() {
+	// improve battle potential for broodlings
+	DoActions(
+		SetMemoryX(6647556, Add, 3, 65535),
+		SetMemoryX(6649548, Add, 1, 65535),
+		SetMemoryX(6684400, Add, 2, 255)
+	);
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(player < 6 && death_summons[ut] > 0 && ut != 40) {
+		const cm = EPDCUnitMap(epd);
+		const lap = cm.lastAttackingPlayer;
+		if(lap < 6) {
+			setloc($L("shared"), x, y);
+			dilateloc($L("shared"), 64, 64);
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+			utils.safe_spawn(death_summons[ut], 40, player, "shared", "buffer");
+			utils.decide_target_if_comp("target", player);
+			utils.order_computer(40, player, "shared", Patrol, "target");
+		}
+	}
+}

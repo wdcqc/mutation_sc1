@@ -1,0 +1,398 @@
+import PluginVariables as msqcvar;
+import constants;
+import utils;
+import rand_color;
+
+function create_mode_selector() {
+    const ox, oy = getlocTL("ModeSelect");
+    const locEPD0 = EPD(0x58DC60) - 3 + 5 * $L("spawn");
+    const locEPD1 = locEPD0 + 1;
+    setloc($L("spawn"), ox, oy);
+    setloc($L("credits"),       ox + 32,  oy + 32,  ox + 64,  oy + 64);
+    setloc($L("daily_mode"),    ox + 256, oy + 64,  ox + 384, oy + 128);
+    setloc($L("random_mode"),   ox + 64,  oy + 192, ox + 160, oy + 256);
+    setloc($L("custom_mode"),   ox + 480, oy + 192, ox + 576, oy + 256);
+    setloc($L("ModeSelectMR1"), ox + 160, oy + 128, ox + 224, oy + 192);
+    setloc($L("ModeSelectMR2"), ox + 416, oy + 128, ox + 480, oy + 192);
+    setloc($L("altar"),         ox + 256, oy + 0,   ox + 384, oy + 128);
+
+    // set neutral locations as well
+    DoActions(
+        SetMemory(0x00662b74, SetTo, 65567),
+        SetMemory(0x00662b78, SetTo, 65567),
+        SetMemory(0x00662b7c, SetTo, 65567),
+        SetMemoryEPD(locEPD0, Add, 32),
+        SetMemoryEPD(locEPD1, Add, 32),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 1216),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, -1152),
+        SetMemoryEPD(locEPD1, Add, -64),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, -1088),
+        SetMemoryEPD(locEPD1, Add, 576),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 64),
+        SetMemoryEPD(locEPD1, Add, 0),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, -960),
+        SetMemoryEPD(locEPD1, Add, -160),
+        CreateUnit(1, 199, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 1024),
+        SetMemoryEPD(locEPD1, Add, -416),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, 0),
+        SetMemoryEPD(locEPD1, Add, 576),
+        CreateUnit(1, 215, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, -192),
+        SetMemoryEPD(locEPD1, Add, -160),
+        CreateUnit(1, 197, "spawn", 6),
+        SetMemoryEPD(locEPD0, Add, -416),
+        SetMemoryEPD(locEPD1, Add, -256),
+        CreateUnit(1, 198, "spawn", 6),
+        CreateUnit(1, 101, "ModeSelectMR1", Force1),
+        CreateUnit(1, 101, "ModeSelectMR2", Force1),
+        CreateUnit(1, 101, "ModeSelectMR1", Force2),
+        CreateUnit(1, 101, "ModeSelectMR2", Force2),
+        GiveUnits(All, "(any unit)", P7, "ModeSelect", P10),
+        SetMemory(0x00662b74, SetTo, 4194400),
+        SetMemory(0x00662b78, SetTo, 4194400),
+        SetMemory(0x00662b7c, SetTo, 4194400)
+    );
+}
+
+function create_anti_rush() {
+    // set floorgun to air anim level
+    // randomly generate 20 gun traps around base 32x32 range
+    DoActions(
+        SetMemoryX(0x00663220, SetTo, 3584, 65280),
+        SetMemory(0x00661e50, SetTo, 65537),
+        SetMemory(0x00661e54, SetTo, 65537),
+        SetMemory(0x00662ba4, SetTo, 65537),
+        SetMemoryX(0x006616b8, SetTo, 131072, -65536),
+        SetMemoryX(0x00657230, SetTo, 59, 255),
+        SetMemoryX(0x00657738, SetTo, 25, 65535)
+    );
+    var created_traps, attempts;
+    for(var player = 0; player < 6; player++) {
+        if(Command(player, AtLeast, 1, "(buildings)")) {
+            setloc("spawn", 0, 0, 0, 0);
+            MoveLocation("spawn", "(buildings)", player, $L("p1start") + player);
+            const ox, oy = getlocTL("spawn");
+            created_traps = 0;
+            attempts = 0;
+            while(created_traps < 16 && attempts < 50) {
+                attempts++;
+                const x = ox - 512 + rand() * 1024 / 65536;
+                const y = oy - 512 + rand() * 1024 / 65536;
+                if(!(x > 32 && x < constants.map_max_x - 32 && y > 32 && y < constants.map_max_y - 32)) {
+                    continue;
+                }
+                setloc("spawn", x, y);
+                dilateloc("spawn", 48, 48);
+                RemoveUnitAt(All, 101, "spawn", P9);
+                if(Bring(AllPlayers, AtLeast, 1, "(any unit)", "spawn")) {
+                    continue;
+                }
+                const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+                if(spawn_ptr > 0) {
+                    CreateUnit(1, 209, "spawn", player);
+                    const cm = EPDCUnitMap(spawn_epd);
+                    if(cm.unitType == 209 && cm.hp > 0) {
+                        cm.removeTimer = 5000 + rand() % 10000;
+                        // SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 2359298, 2359298);
+                        SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 2359300, 2359300);
+                        created_traps += 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function set_alliances() {
+    const v = getcurpl();
+    var player;
+    for(player = 0; player < 3; player++) {
+        setcurpl(player);
+        DoActions(
+            SetAllianceStatus(Force1, AlliedVictory),
+            SetAllianceStatus(Force2, Enemy),
+            SetAllianceStatus(P7, Enemy),
+            SetAllianceStatus(P8, Ally),
+            SetAllianceStatus(P9, Enemy),
+            SetAllianceStatus(P10, Ally),
+            SetAllianceStatus(P11, Enemy),
+            RunAIScript("Turn ON Shared Vision for Player 1"),
+            RunAIScript("Turn ON Shared Vision for Player 2"),
+            RunAIScript("Turn ON Shared Vision for Player 3"),
+            RunAIScript("Turn OFF Shared Vision for Player 4"),
+            RunAIScript("Turn OFF Shared Vision for Player 5"),
+            RunAIScript("Turn OFF Shared Vision for Player 6"),
+            RunAIScript("Turn OFF Shared Vision for Player 7"),
+            RunAIScript("Turn OFF Shared Vision for Player 8")
+        );
+    }
+    for(player = 3; player < 6; player++) {
+        setcurpl(player);
+        DoActions(
+            SetAllianceStatus(Force1, Enemy),
+            SetAllianceStatus(Force2, AlliedVictory),
+            SetAllianceStatus(P7, Enemy),
+            SetAllianceStatus(P8, Ally),
+            SetAllianceStatus(P9, Enemy),
+            SetAllianceStatus(P10, Ally),
+            SetAllianceStatus(P11, Enemy),
+            RunAIScript("Turn OFF Shared Vision for Player 1"),
+            RunAIScript("Turn OFF Shared Vision for Player 2"),
+            RunAIScript("Turn OFF Shared Vision for Player 3"),
+            RunAIScript("Turn ON Shared Vision for Player 4"),
+            RunAIScript("Turn ON Shared Vision for Player 5"),
+            RunAIScript("Turn ON Shared Vision for Player 6"),
+            RunAIScript("Turn OFF Shared Vision for Player 7"),
+            RunAIScript("Turn OFF Shared Vision for Player 8")
+        );
+    }
+    setcurpl(P7);
+    DoActions(
+        SetAllianceStatus(Force1, Enemy),
+        SetAllianceStatus(Force2, Enemy),
+        SetAllianceStatus(P8, Ally),
+        SetAllianceStatus(P9, Ally),
+        SetAllianceStatus(P10, Ally),
+        SetAllianceStatus(P11, Ally),
+        RunAIScript("Turn ON Shared Vision for Player 1"),
+        RunAIScript("Turn ON Shared Vision for Player 2"),
+        RunAIScript("Turn ON Shared Vision for Player 3"),
+        RunAIScript("Turn ON Shared Vision for Player 4"),
+        RunAIScript("Turn ON Shared Vision for Player 5"),
+        RunAIScript("Turn ON Shared Vision for Player 6"),
+        RunAIScript("Turn ON Shared Vision for Player 7"),
+        RunAIScript("Turn ON Shared Vision for Player 8")
+    );
+    setcurpl(P8);
+    DoActions(
+        SetAllianceStatus(Force1, Ally),
+        SetAllianceStatus(Force2, Ally),
+        SetAllianceStatus(P8, Ally),
+        SetAllianceStatus(P9, Ally),
+        SetAllianceStatus(P10, Ally),
+        SetAllianceStatus(P11, Ally),
+        RunAIScript("Turn ON Shared Vision for Player 1"),
+        RunAIScript("Turn ON Shared Vision for Player 2"),
+        RunAIScript("Turn ON Shared Vision for Player 3"),
+        RunAIScript("Turn ON Shared Vision for Player 4"),
+        RunAIScript("Turn ON Shared Vision for Player 5"),
+        RunAIScript("Turn ON Shared Vision for Player 6"),
+        RunAIScript("Turn ON Shared Vision for Player 7"),
+        RunAIScript("Turn ON Shared Vision for Player 8")
+    );
+    setcurpl(v);
+}
+
+function handle_comp_obs() {
+    if(MemoryX(0x0057efc0, Exactly, 2, 255) && MemoryX(0x0057efe4, Exactly, 2, 255)) {
+        // misconfigured obs
+        if(getuserplayerid() == 6) {
+            printAll("\x03Please use the observer slot and keep the player slot empty.");
+            SetMemory(0xdfdcfdfc, SetTo, 0);
+        }
+    }
+    if((MemoryX(0x0058d5b4, Exactly, 67108864, -16777216) && MemoryX(0x0057efe4, Exactly, 2, 255))
+    || (MemoryX(0x0057efc0, Exactly, 0, 255) && MemoryX(0x0057efe4, Exactly, 2, 255) && MemoryX(0x0058d5b4, Exactly, 0, -16777216))) {
+        SetSwitch("game_compobs", Set);
+        // type2
+        if(!MemoryX(0x0057efc0, Exactly, 1, 255)) {
+            SetMemoryX(0x0057efc0, SetTo, 1, 255);
+            SetMemoryX(0x0057f1b8, SetTo, 65536, 16711680);
+        }
+        const v = getcurpl();
+        DoActions(
+            SetMemoryX(0x0058d638, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d644, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d650, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d65c, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d668, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d674, SetTo, 16777216, -16777216),
+            SetMemoryX(0x0058d680, SetTo, 16777216, -16777216),
+            SetMemory(0x0058d688, SetTo, 16843009),
+            SetMemoryX(0x0058d68c, SetTo, 65793, 16777215),
+            SetMemory(0x0057f208, SetTo, 127)
+        );
+        setcurpl(v);
+        utils.disable_victory_check();
+
+        utils.robust_randomize();
+        rand_color.randomize_comp_colors();
+
+        // p8 black
+        SetMemoryX(0x00581dac, SetTo, 0, 16711680);
+        SetMemoryX(0x00581ddc, SetTo, 0, 65280);
+
+        // player types
+        SetMemoryX(0x0057eee8, SetTo, 1, 255);
+        SetMemoryX(0x0057efe4, SetTo, 2, 255);
+    }
+}
+
+function handle_auto_comp() {
+    // P7 & P8 is computer, P9 is terran
+    if(MemoryX(0x0057efc0, Exactly, 1, 255) && MemoryX(0x0057efc0, Exactly, 256, 65280) && MemoryX(0x0057efe4, Exactly, 256, 65280)) {
+        // set player slot to computer if inactive
+        for(var player = 0; player < 6; player++) {
+            if(MemoryXEPD(EPD(0x57EEE8) + 9 * player, Exactly, 0, 255)) {
+                SetMemoryXEPD(EPD(0x57EEE8) + 9 * player, SetTo, 1, 65535);
+                bwrite(0x57F1B4 + player, 1);
+                bwrite(0x57F1C0 + player, 0);
+            }
+        }
+    }
+}

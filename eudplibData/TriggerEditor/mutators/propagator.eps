@@ -1,0 +1,114 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+	DoActions(
+		// unit 52
+		SetMemory(6693920, SetTo, 12288),
+		SetMemoryX(6693300, SetTo, 1, 255),
+		SetMemory(6701392, SetTo, 402718912),
+		SetMemoryX(6698732, SetTo, 93, 255),
+		SetMemoryX(6690580, SetTo, 93, 255),
+		SetMemoryX(6696428, SetTo, 6, 255),
+		SetMemoryX(6702380, SetTo, 1, 255),
+		SetMemory(6691176, SetTo, 589833),
+		SetMemory(6691180, SetTo, 589833),
+		SetMemory(6695216, SetTo, 1245203),
+		SetMemoryX(6702148, SetTo, 255, 255),
+		SetMemoryX(6696944, SetTo, 23, 65535),
+		SetMemoryX(6684696, SetTo, 796, 65535),
+		SetMemoryX(6696024, SetTo, 799, 65535),
+		SetMemoryX(6700152, SetTo, 792, 65535),
+		SetMemoryX(6689960, SetTo, 795, 65535),
+		SetMemoryX(6699936, SetTo, 788, 65535),
+		SetMemoryX(6692688, SetTo, 791, 65535),
+		SetMemoryX(6692904, SetTo, 787, 65535),
+		SetMemoryX(6693068, SetTo, 1, 255),
+		SetMemoryX(6698500, SetTo, 60, 255),
+
+		// weapon 93
+		SetMemoryX(6648728, SetTo, 23461888, -65536),
+		SetMemoryX(6645816, SetTo, 2621440, -65536),
+		SetMemory(6649316, SetTo, 16),
+		SetMemoryX(6647656, SetTo, 0, -65536),
+		SetMemoryX(6649648, SetTo, 0, -65536),
+		SetMemoryX(6647828, SetTo, 20480, 65280),
+		SetMemoryX(6650448, SetTo, 0, -65536),
+		SetMemoryX(6645452, SetTo, 512, 65280),
+		SetMemory(6647324, SetTo, 172),
+		SetMemoryX(6646252, SetTo, 4096, 65280)
+	);
+}
+
+function spawn_propagator(player : TrgPlayer, loc : TrgLocation) {
+	DoActions(
+		SetMemory(6745180, SetTo, 27),
+		SetMemory(6745348, SetTo, 250),
+		SetMemoryX(6725204, SetTo, 134217728, -16777216),
+		SetMemoryX(6725164, SetTo, 3328, 65280),
+		SetMemory(7118588, SetTo, 720),
+		SetMemoryX(7117944, SetTo, 4718592, -65536),
+		SetMemoryX(7116888, SetTo, 0, 65280)
+	);
+	utils.safe_spawn(1, 52, player, loc, "buffer");
+	DoActions(
+		SetMemory(6745180, SetTo, 4),
+		SetMemory(6745348, SetTo, 275),
+		SetMemoryX(6725204, SetTo, 167772160, -16777216),
+		SetMemoryX(6725164, SetTo, 0, 65280),
+		SetMemory(7118588, SetTo, 1),
+		SetMemoryX(7117944, SetTo, 65536, -65536),
+		SetMemoryX(7116888, SetTo, 512, 65280)
+	);
+	utils.decide_target_if_comp("target", player);
+	utils.order_computer(52, player, loc, Patrol, "target");
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType == 52) {
+		if(cm.groundWeaponCooldown > 60 || cm.airWeaponCooldown > 60) {
+			cm.groundWeaponCooldown = 58;
+			cm.airWeaponCooldown = 58;
+			const target_ptr, target_epd = cunitepdread_epd(epd + 92 / 4);
+			if(target_ptr > 0) {
+				const target_cm = EPDCUnitMap(target_epd);
+				if(target_cm.orderID > 0) {
+					const x, y = target_cm.getpos("pos");
+					setloc($L("shared"), x, y);
+					SetMemoryXEPD(target_epd + 220 / 4, SetTo, 2359296, 2359296);
+					target_cm.die();
+					if((target_cm.playerID < 3 && player >= 3) || (target_cm.playerID >= 3 && player < 3) || player >= 6) {
+						spawn_propagator(player, "shared");
+					}
+				}
+			}
+		}
+	}
+}
+
+var next_propagator = 660;
+function loop32_normal() {
+	ModifyUnitEnergy(All, 52, AllPlayers, "Anywhere", 0);
+	if(ElapsedTime(AtLeast, next_propagator)) {
+		SetMemory(6693920, Add, 512);
+		const player_force1 = utils.rand_player_force1();
+		const player_force2 = utils.rand_player_force2();
+
+		spawn_propagator(player_force1, $L("p1start") + player_force1);
+		spawn_propagator(player_force2, $L("p1start") + player_force2);
+		messages.announce_propagator(player_force1, $L("p1start") + player_force1);
+		messages.announce_propagator(player_force2, $L("p1start") + player_force2);
+
+		if(ElapsedTime(AtMost, 1200)) {
+			next_propagator += 240;
+		}
+		else if(ElapsedTime(AtMost, 2400)) {
+			next_propagator += 180;
+		}
+		else {
+			next_propagator += 120;
+		}
+	}
+}

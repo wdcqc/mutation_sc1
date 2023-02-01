@@ -1,0 +1,501 @@
+import PluginVariables as msqcvar;
+import main;
+import constants;
+
+var difficulty = 1;
+var income_level = 0;
+const full_attack_delay = EUDArray(8);
+const attack_now = PVariable(list(0, 0, 0, 0, 0, 0, 0, 0));
+var full_attack_supply = 380;
+
+var extra_income = 0;
+
+function update_income_level() {
+	if(ElapsedTime(AtMost, 300)) {
+		income_level = 0;
+	}
+	else if(ElapsedTime(AtMost, 600)){
+		income_level = 1;
+	}
+	else if(ElapsedTime(AtMost, 1200)){
+		income_level = 2;
+	}
+	else if(ElapsedTime(AtMost, 1800)){
+		income_level = 3;
+	}
+	else if(ElapsedTime(AtMost, 2700)){
+		income_level = 4;
+	}
+	else {
+		income_level = 5;
+	}
+
+	if(difficulty == 2) {
+		income_level += 1;
+	}
+	else if(difficulty == 3) {
+		income_level += 2;
+	}
+}
+
+var upgrade_count = 0;
+var next_upgrade = 600;
+var next_upgrade_delta = 450;
+function auto_upgrade() {
+	once {
+		for(var player = 0; player < 6; player++) {
+			if(constants.is_computer[player]) {
+				// defense upgrade
+				bwrite(0x58F339 + 15 * player, 1);
+
+				// lurker aspect
+				bwrite(0x58F148 + 20 * player, 1);
+			}
+		}
+	}
+	once(difficulty == 2) {
+		next_upgrade_delta -= 150;
+		next_upgrade -= 100;
+	}
+	if(ElapsedTime(AtLeast, next_upgrade)) {
+		for(var player = 0; player < 6; player++) {
+			if(constants.is_computer[player]) {
+				const pep, pmd = div(player, 2);
+				if(pmd == 0) {
+					DoActions(
+						SetMemoryEPD(EPD(0x58d2b0) + 23 * pep, Add, 16843009),
+						SetMemoryEPD(EPD(0x58d2b4) + 23 * pep, Add, 16843009),
+						SetMemoryEPD(EPD(0x58d2b8) + 23 * pep, Add, 16843009),
+						SetMemoryEPD(EPD(0x58d2bc) + 23 * pep, Add, 16843009)
+					);
+				}
+				else {
+					DoActions(
+						SetMemoryXEPD(EPD(0x58d2dc) + 23 * pep, Add, 16842752, -65536),
+						SetMemoryEPD(EPD(0x58d2e0) + 23 * pep, Add, 16843009),
+						SetMemoryEPD(EPD(0x58d2e4) + 23 * pep, Add, 16843009),
+						SetMemoryEPD(EPD(0x58d2e8) + 23 * pep, Add, 16843009),
+						SetMemoryXEPD(EPD(0x58d2ec) + 23 * pep, Add, 257, 65535)
+					);
+				}
+			}
+		}
+		next_upgrade += next_upgrade_delta;
+		upgrade_count += 1;
+		if(upgrade_count >= 3) {
+			next_upgrade = 9999;
+		}
+	}
+}
+
+const build_time_reduction = EUDArray(12);
+const larva_time_reduction = EUDArray(12);
+function set_btr(player : TrgPlayer, btr, ltr) {
+	build_time_reduction[player] = btr;
+	larva_time_reduction[player] = ltr;
+}
+
+function update_btr() {
+	const v = getcurpl();
+	var btr, ltr;
+	for(var player = 0; player < 6; player++) {
+		setcurpl(player);
+		btr = 0;
+		ltr = 0;
+		if(ElapsedTime(AtLeast, 600)) {
+			btr += 4;
+		}
+		if(ElapsedTime(AtLeast, 1200)) {
+			btr += 4;
+			ltr += 1;
+		}
+		if(ElapsedTime(AtLeast, 2400)) {
+			btr += 4;
+		}
+		if(ElapsedTime(AtLeast, 3600)) {
+			btr += 8;
+			ltr += 1;
+		}
+		else if(Deaths(player, AtLeast, 10, "(buildings)")) {
+			btr += 4;
+			ltr += 1;
+		}
+		if(Deaths(player, AtLeast, 20, "(buildings)")) {
+			btr += 4;
+			ltr += 1;
+			if(Deaths(player, AtLeast, 30, "(buildings)")) {
+				btr += 4;
+				ltr += 1;
+				if(Deaths(player, AtLeast, 40, "(buildings)")) {
+					btr += 4;
+					ltr += 1;
+				}
+			}
+		}
+		if(Deaths(Allies, AtLeast, 20, "(buildings)")) {
+			btr += 8;
+			ltr += 1;
+			if(Deaths(Allies, AtLeast, 40, "(buildings)")) {
+				btr += 8;
+				ltr += 1;
+				if(Deaths(Allies, AtLeast, 60, "(buildings)")) {
+					btr += 8;
+					ltr += 1;
+					if(Deaths(Allies, AtLeast, 80, "(buildings)")) {
+						btr += 8;
+						ltr += 1;
+					}
+				}
+			}
+		}
+		if(income_level >= 4) {
+			btr += 4 * (income_level - 3);
+			ltr += income_level - 4;
+		}
+		if(difficulty >= 2) {
+			btr += 4;
+			if(ElapsedTime(AtLeast, 1800)) {
+				ltr += 1;
+			}
+		}
+		if(Accumulate(player, AtLeast, 8000, Ore) && Accumulate(player, AtLeast, 8000, Gas)) {
+			btr += 4;
+			ltr += 1;
+			if(Accumulate(player, AtLeast, 16000, Ore) && Accumulate(player, AtLeast, 16000, Gas)) {
+				btr += 8;
+				ltr += 1;
+				if(Accumulate(player, AtLeast, 24000, Ore) && Accumulate(player, AtLeast, 24000, Gas)) {
+					btr += 12;
+					ltr += 1;
+				}
+			}
+		}
+		build_time_reduction[player] = btr;
+		larva_time_reduction[player] = ltr;
+	}
+	setcurpl(v);
+}
+
+var ai_loop_n = 0;
+var hangar_loop_n = 0;
+var pathcheck_loop_n = 0;
+function loop8_normal() {
+    ai_loop_n += 1;
+    if(ai_loop_n >= 4) {
+        auto_upgrade();
+        update_income_level();
+        ai_loop_n = 0;
+    }
+    hangar_loop_n += 1;
+    if(hangar_loop_n >= 12) {
+        hangar_loop_n = 0;
+    }
+    pathcheck_loop_n += 1;
+    if(pathcheck_loop_n >= 90) {
+        pathcheck_loop_n = 0;
+    }
+    
+    update_btr();
+	
+    // more supply at overtime
+    once(ElapsedTime(AtLeast, 3600)) {
+		for(var player = 0; player < 6; player++) {
+			if(constants.is_computer[player]) {
+				DoActions(
+					SetMemoryEPD(EPD(0x5821A4) + player, Add, 100),
+					SetMemoryEPD(EPD(0x582234) + player, Add, 100),
+					SetMemoryEPD(EPD(0x5822C4) + player, Add, 100),
+				);
+			}
+		}
+    }
+    once(ElapsedTime(AtLeast, 4800)) {
+		for(var player = 0; player < 6; player++) {
+			if(constants.is_computer[player]) {
+				DoActions(
+					SetMemoryEPD(EPD(0x5821A4) + player, Add, 100),
+					SetMemoryEPD(EPD(0x582234) + player, Add, 100),
+					SetMemoryEPD(EPD(0x5822C4) + player, Add, 100),
+				);
+			}
+		}
+    }
+
+	for(var player = 0; player < 6; player++) {
+		if(constants.is_computer[player]) {
+			if(Command(player, AtLeast, 3, "(buildings)")) {
+    			if(hangar_loop_n == 0) {
+					ModifyUnitHangarCount(1, All, 72, player, "Anywhere");
+					ModifyUnitHangarCount(1, All, 82, player, "Anywhere");
+					ModifyUnitHangarCount(1, All, 81, player, "Anywhere");
+					if(difficulty >= 2) {
+						ModifyUnitHangarCount(1, All, 83, player, "Anywhere");
+						ModifyUnitEnergy(All, 107, player, "Anywhere", 100);
+					}
+				}
+				if(Accumulate(player, AtLeast, 8000, Ore) && Accumulate(player, AtMost, 2000, Gas)) {
+					SetResources(player, Subtract, 24, Ore);
+					SetResources(player, Add, 12, Gas);
+				}
+				else if(Accumulate(player, AtMost, 2000, Ore) && Accumulate(player, AtLeast, 8000, Gas)) {
+					SetResources(player, Add, 24, Ore);
+					SetResources(player, Subtract, 12, Gas);
+				}
+				if(Accumulate(player, AtLeast, 25000, Ore) && Accumulate(player, AtLeast, 25000, Gas)) {
+				}
+				else {
+					if(ElapsedTime(AtMost, 600)) {
+						SetResources(player, Add, 1, Ore);
+						SetResources(player, Add, 1, Gas);
+					}
+					if(income_level < 4) {
+						SetResources(player, Add, 2 + 3 * income_level, Ore);
+						SetResources(player, Add, 2 + 3 * income_level, Gas);
+                	}
+					else if(income_level == 4) {
+						SetResources(player, Add, 16, Ore);
+						SetResources(player, Add, 16, Gas);
+					}
+					else if(income_level == 5) {
+						SetResources(player, Add, 25, Ore);
+						SetResources(player, Add, 25, Gas);
+					}
+					else if(income_level == 6) {
+						SetResources(player, Add, 36, Ore);
+						SetResources(player, Add, 36, Gas);
+					}
+					else if(income_level == 7) {
+						SetResources(player, Add, 50, Ore);
+						SetResources(player, Add, 50, Gas);
+					}
+					if(Deaths(player, AtLeast, 5, "(buildings)")) {
+						SetResources(player, Add, 4, Ore);
+						SetResources(player, Add, 4, Gas);
+						if(Deaths(player, AtLeast, 15, "(buildings)")) {
+							SetResources(player, Add, 6, Ore);
+							SetResources(player, Add, 6, Gas);
+							if(Deaths(player, AtLeast, 25, "(buildings)")) {
+								SetResources(player, Add, 8, Ore);
+								SetResources(player, Add, 8, Gas);
+							}
+						}
+					}
+					const v = getcurpl();
+					setcurpl(player);
+					if(Deaths(Allies, AtLeast, 10, "(buildings)")) {
+						SetResources(player, Add, 3, Ore);
+						SetResources(player, Add, 3, Gas);
+						if(Deaths(Allies, AtLeast, 30, "(buildings)")) {
+							SetResources(player, Add, 6, Ore);
+							SetResources(player, Add, 6, Gas);
+							if(Deaths(Allies, AtLeast, 50, "(buildings)")) {
+								SetResources(player, Add, 9, Ore);
+								SetResources(player, Add, 9, Gas);
+								if(Deaths(Allies, AtLeast, 70, "(buildings)")) {
+									SetResources(player, Add, 12, Ore);
+									SetResources(player, Add, 12, Gas);
+								}
+							}
+						}
+					}
+					setcurpl(v);
+				} 
+				if(full_attack_delay[player] > 0) {
+					full_attack_delay[player] -= 1;
+				}
+				else {
+					// only check t/p supply, zerg has send_suicide built in aiscript
+					if(MemoryEPD(EPD(0x582204) + player, AtLeast, full_attack_supply) || MemoryEPD(EPD(0x582294) + player, AtLeast, full_attack_supply) || attack_now[player]) {
+						const v = getcurpl();
+						setcurpl(player);
+						RunAIScript("Send All Units on Strategic Suicide Missions");
+						setcurpl(v);
+						full_attack_delay[player] = 200;
+						attack_now[player] = 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+function force_attack(player : TrgPlayer) {
+	if(full_attack_delay[player] > 40) {
+		full_attack_delay[player] = 40;
+	}
+	attack_now[player] = 1;
+}
+
+function loop8_player(epd, player) {
+	if(constants.is_computer[player]) {
+		const cm = EPDCUnitMap(epd);
+		if(pathcheck_loop_n == 0 && Command(player, AtLeast, 60, "(men)") && cm.unitType >= 106
+		&& Accumulate(player, AtLeast, 12000, OreAndGas)
+		&& MemoryXEPD(epd + 220 / 4, AtMost, 2359295, 2359296)) {
+			var skip_collision_check = 0;
+			epdswitch(epd + 100 / 4, 0xFF) { // unit type
+				case 111, 113, 114, 116, 122, 131, 132, 133, 154, 160, 167:
+					cm.setloc("collision_check");
+					dilateloc("collision_check", 96, 80);
+					break;
+				case 109, 112, 123, 135, 138, 139, 140, 142, 155, 159, 163, 164, 165, 166, 169, 170, 171, 172:
+					cm.setloc("collision_check");
+					dilateloc("collision_check", 80, 64);
+					break;
+				case 156, 162:
+					cm.setloc("collision_check");
+					dilateloc("collision_check", 64, 64);
+					break;
+				default:
+					skip_collision_check = 1;
+			}
+			if(!skip_collision_check) {
+				const v = getcurpl();
+				setcurpl(player);
+				RemoveUnitAt(All, 101, "collision_check", P9);
+				if(Bring(player, AtLeast, 8, "(men)", "collision_check")
+				&& !(Bring(player, AtMost, 3, "Protoss Dragoon", "collision_check")
+				  && Bring(player, AtMost, 3, "Protoss Archon", "collision_check")
+				  && Bring(player, AtMost, 3, "Protoss Reaver", "collision_check")
+				  && Bring(player, AtMost, 3, "Protoss Dark Archon", "collision_check")
+				  && Bring(player, AtMost, 3, "Terran Vulture", "collision_check")
+				  && Bring(player, AtMost, 3, "Terran Siege Tank (Tank Mode)", "collision_check")
+				  && Bring(player, AtMost, 3, "Terran Siege Tank (Siege Mode)", "collision_check")
+				  && Bring(player, AtMost, 3, "Terran Goliath", "collision_check")
+				  && Bring(player, AtMost, 3, "Zerg Ultralisk", "collision_check")
+				)) {
+					SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+				}
+				else if(Bring(Allies, AtLeast, 11, "(men)", "collision_check")
+				&& !(Bring(Allies, AtMost, 4, "Protoss Dragoon", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Protoss Archon", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Protoss Reaver", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Protoss Dark Archon", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Terran Vulture", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Terran Siege Tank (Tank Mode)", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Terran Siege Tank (Siege Mode)", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Terran Goliath", "collision_check")
+				  && Bring(Allies, AtMost, 4, "Zerg Ultralisk", "collision_check")
+				)) {
+					SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+				}
+				setcurpl(v);
+			}
+		}
+		epdswitch(epd + 100 / 4, 255) { // unit type
+			case 160, 167, 155, 111, 113, 114: // factories
+				if(MemoryEPD(epd + 236 / 4, AtLeast, 1) && cm.secondaryOrder == 38) {
+					const ubb_epd = epdread_epd(epd + 236 / 4);
+					const ubb_cm = EPDCUnitMap(ubb_epd);
+					if(ubb_cm.remainingBuildTime > build_time_reduction[player]) {
+						ubb_cm.remainingBuildTime -= build_time_reduction[player];
+					}
+					else if(ubb_cm.remainingBuildTime >= 8) {
+						ubb_cm.remainingBuildTime = 7;
+					}
+					if(ElapsedTime(AtLeast, 6000) && ubb_cm.remainingBuildTime > 14) { // super-overtime
+						ubb_cm.remainingBuildTime = 14;
+					}
+					if(ubb_cm.remainingBuildTime < 64) {
+						const full_hp = dwread_epd(EPD(0x662350) + ubb_cm.unitType);
+						if(ubb_cm.hp < full_hp) {
+							ubb_cm.hp = full_hp;
+							if(build_time_reduction[player] >= 12 && MemoryXEPD(EPD(0x664080) + ubb_cm.unitType, Exactly, 2097152, 2097152)) {
+								ubb_cm.energy = 175 * 256;
+								if(build_time_reduction[player] >= 24) {
+									ubb_cm.energy = 250 * 256;
+								}
+							}
+						}
+					}
+				}
+				break;
+			case 131, 132, 133: // hatchery line
+				if(cm.larvaTimer < 36) {
+					if(cm.larvaTimer > larva_time_reduction[player]) {
+						SetMemoryXEPD(epd + 202 / 4, Subtract, larva_time_reduction[player] * 65536, 0x00FF0000);
+					}
+					else if(cm.larvaTimer > 2) {
+						SetMemoryXEPD(epd + 202 / 4, SetTo, 2 * 65536, 0x00FF0000);
+					}
+				}
+				break;
+			case 7: // scv
+				if(cm.orderID == 34) {
+					// SCV tries to repair building
+					const tgt_ptr, tgt_epd = cunitepdread_epd(epd + 92 / 4);
+					if(tgt_ptr > 0) {
+						const tgt_cm = EPDCUnitMap(tgt_epd);
+						if(tgt_cm.remainingBuildTime > 0 && MemoryXEPD(EPD(0x664080) + tgt_cm.unitType, Exactly, 0, 2)) {
+							// building is unfinished, use continue build instead of repair
+							cm.orderID = 33;
+							cm.orderState = 0;
+						}
+					}
+				}
+				break;
+		}
+		if(MemoryXEPD(EPD(0x664080) + cm.unitType, Exactly, 2097152, 2097152)) { // spellcaster
+			if(MemoryXEPD(epd + 162 / 4, AtMost, 249 * 256 * 65536, 0xFFFF0000)) {
+				SetMemoryXEPD(epd + 162 / 4, Add, 24 * 65536, 0xFFFF0000);
+				if(difficulty >= 2) {
+					SetMemoryXEPD(epd + 162 / 4, Add, 36 * 65536, 0xFFFF0000);
+				}
+			}
+		}
+	}
+}
+
+function p7_init() {
+	// initialize p7 upgrades and spells.
+	DoActions(
+		SetMemoryX(5821396, SetTo, 257, 257),
+		SetMemoryX(5821400, SetTo, 1, 1),
+		SetMemoryX(5821404, SetTo, 16843009, 16843009),
+		SetMemoryX(5821408, SetTo, 65792, 65792),
+		SetMemoryX(5821412, SetTo, 16843008, 16843008),
+		SetMemoryX(5821416, SetTo, 16843008, 16843008),
+		SetMemoryX(5821420, SetTo, 16843008, 16843008),
+		SetMemoryX(5829516, SetTo, 65793, 65793),
+		SetMemoryX(5820372, SetTo, 16843009, 16843009),
+		SetMemoryX(5820376, SetTo, 16777216, 16777216),
+		SetMemoryX(5820380, SetTo, 65793, 65793),
+		SetMemoryX(5820384, SetTo, 256, 256),
+		SetMemoryX(5820388, SetTo, 16777472, 16777472),
+		SetMemoryX(5820392, SetTo, 257, 257),
+		SetMemoryX(5829048, SetTo, 16777473, 16777473),
+		SetMemoryX(5829052, SetTo, 16842752, 16842752)
+	);
+}
+
+function hard_mode() {
+	difficulty = 2;
+	// 400 supply, +1 defense weapon upgrade, faster ai upgrade
+	for(var player = 0; player < 6; player++) {
+		if(constants.is_computer[player]) {
+			DoActions(
+				SetMemoryEPD(EPD(0x5821A4) + player, SetTo, 800),
+				SetMemoryEPD(EPD(0x582234) + player, SetTo, 800),
+				SetMemoryEPD(EPD(0x5822C4) + player, SetTo, 800)
+			);
+			bwrite(0x58F339 + 15 * player, 2);
+		}
+	}
+	DoActions(
+		// p7 additional upgrades and spells
+		SetMemoryX(5821396, SetTo, 16777216, 16777216),
+		SetMemoryX(5821400, SetTo, 16843008, 16843008),
+		SetMemoryX(5821408, SetTo, 16777217, 16777217),
+		SetMemoryX(5821412, SetTo, 1, 1),
+		SetMemoryX(5821420, SetTo, 1, 1),
+		SetMemoryX(5821424, SetTo, 1, 1),
+		SetMemoryX(5829508, SetTo, 16777216, 16777216),
+		SetMemoryX(5829512, SetTo, 16777472, 16777472),
+		SetMemoryX(5820376, SetTo, 256, 256),
+		SetMemoryX(5820384, SetTo, 65536, 65536),
+		SetMemoryX(5820384, SetTo, 16777216, 16777216),
+		SetMemoryX(5820388, SetTo, 256, 256),
+		SetMemoryX(5820392, SetTo, 65536, 65536)
+	);
+	full_attack_supply = 600;
+}

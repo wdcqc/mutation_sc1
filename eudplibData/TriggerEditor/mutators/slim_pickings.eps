@@ -1,0 +1,112 @@
+import PluginVariables as msqcvar;
+import utils;
+
+var inside_prob = 40000;
+
+function init() {
+	// resource item settings
+	DoActions(
+		SetMemoryX(6702064, SetTo, 0, 8390656),
+		SetMemoryX(6702088, SetTo, 0, 8390656),
+		SetMemoryX(6693700, SetTo, 23, 255),
+		SetMemoryX(6693704, SetTo, 1507328, 16711680),
+		SetMemoryX(6696828, SetTo, 23, 255),
+		SetMemoryX(6696832, SetTo, 1507328, 16711680),
+		SetMemoryX(6703476, SetTo, 23, 255),
+		SetMemoryX(6703480, SetTo, 1507328, 16711680),
+		SetMemory(6694592, SetTo, 256),
+		SetMemory(6694616, SetTo, 256),
+		SetMemoryX(6693468, SetTo, 1, 255),
+		SetMemoryX(6693472, SetTo, 65536, 16711680),
+		SetMemoryX(6690512, SetTo, 2, 2),
+		SetMemoryX(6690524, SetTo, 2, 2),
+		SetMemory(6692520, SetTo, 65537),
+		SetMemory(6692524, SetTo, 65537),
+		SetMemory(6692568, SetTo, 65537),
+		SetMemory(6692572, SetTo, 65537),
+		SetMemory(6695888, SetTo, 65537),
+		SetMemory(6695912, SetTo, 65537)
+	);
+	if(Switch("game_hard", Set)) {
+		inside_prob = 20000;
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType == 7 || cm.unitType == 41 || cm.unitType == 64) {
+		if(cm.resourceCarryAmount == 8) {
+			cm.resourceCarryAmount = 3;
+		}
+	}
+}
+
+function loop32_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.playerID == 6 && (cm.unitType == 220 || cm.unitType == 226)) {
+		if(cm.removeTimer == 0) {
+			cm.removeTimer = 3600;
+		}
+	}
+}
+
+function loop1_normal() {
+	foreach(player : EUDLoopPlayer()) {
+		if(Kills(player, AtLeast, 1, 220)) {
+			SetMemoryEPD(EPD(0x58A1E4) + player, Subtract, 1);
+			SetResources(player, Add, 100, Ore);
+		}
+		if(Kills(player, AtLeast, 1, 226)) {
+			SetMemoryEPD(EPD(0x58A304) + player, Subtract, 1);
+			SetResources(player, Add, 100, Gas);
+		}
+	}
+}
+
+var nextSpawn = 7;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, nextSpawn)) {
+		nextSpawn += 4;
+		if(ElapsedTime(AtMost, 600)) {
+			nextSpawn -= 1;
+		}
+		if(ElapsedTime(AtMost, 900) || rand() < inside_prob) {
+			const x1, y1 = utils.get_force1_loc();
+			setloc("shared", x1, y1);
+			utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			const x2, y2 = utils.get_force1_loc();
+			setloc("shared", x2, y2);
+			if(rand() < 32768) {
+				utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			}
+			else {
+				utils.safe_spawn(1, 226, P7, "shared", "buffer");
+			}
+
+			const x3, y3 = utils.get_force2_loc();
+			setloc("shared", x3, y3);
+			utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			const x4, y4 = utils.get_force2_loc();
+			setloc("shared", x4, y4);
+			if(rand() < 32768) {
+				utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			}
+			else {
+				utils.safe_spawn(1, 226, P7, "shared", "buffer");
+			}
+		}
+		else {
+			const x1, y1 = utils.get_neutral_loc();
+			setloc("shared", x1, y1);
+			utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			const x2, y2 = utils.get_neutral_loc();
+			setloc("shared", x2, y2);
+			if(rand() < 32768) {
+				utils.safe_spawn(1, 220, P7, "shared", "buffer");
+			}
+			else {
+				utils.safe_spawn(1, 226, P7, "shared", "buffer");
+			}
+		}
+	}
+}

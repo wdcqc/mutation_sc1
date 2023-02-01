@@ -1,0 +1,27 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	DoActions(
+		SetMemory(6691448, SetTo, 131074),
+		SetMemory(6691452, SetTo, 131074),
+		SetMemory(6695352, SetTo, 0),
+		SetMemoryX(6696460, SetTo, 0, 16711680),
+		SetMemoryX(6697844, SetTo, 1507328, 16711680),
+		SetMemoryX(6699684, SetTo, 1507328, 16711680),
+		SetMemoryX(6703340, SetTo, 1507328, 16711680),
+		SetMemory(6646608, SetTo, 6666),
+		SetMemory(6649256, SetTo, 6144),
+		SetMemoryX(6698988, SetTo, 0, 16711680)
+	);
+}
+
+function loop32_normal() {
+	for(var player = 0; player < 6; player++) {
+		if(Bring(player, AtMost, 0, 86, "altar")) {
+			RemoveUnit(86, player);
+			CreateUnitWithProperties(1, 86, "altar", player, UnitProperty(invincible=True));
+		}
+		MoveUnit(All, 86, player, "Anywhere", "altar");
+	}
+}

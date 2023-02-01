@@ -1,0 +1,31 @@
+# Python files
+__pycache__/
+.ipynb_checkpoints/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Temp files
+*.tmp
+
+# Backup files
+backup/
+
+# SCAIEdit files
+*.cai
+
+# EPScript files
+__epspy__/
+
+# Macro
+/*.bat
+
+# Output files
+output/*.scm
+output/*.scx
+output/*.chk
+
+# Debug files
+debug.txt
+test_*
+candidates/

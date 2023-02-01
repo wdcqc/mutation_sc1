@@ -1,0 +1,107 @@
+import PluginVariables as msqcvar;
+import utils;
+import main;
+import messages;
+import constants;
+
+var supply_increase = 16;
+
+function init() {
+	DoActions(
+		// supply-provided (it breaks computer AI, removed)
+		/*
+		SetMemoryX(6702832, SetTo, 0, 16711680),
+		SetMemoryX(6702848, SetTo, 0, 65280),
+		SetMemoryX(6702896, SetTo, 0, 16711680),
+		SetMemoryX(6702900, SetTo, 0, 65280),
+		SetMemoryX(6702920, SetTo, 0, -16777216),
+		SetMemoryX(6702924, SetTo, 0, 65535),
+		SetMemoryX(6702944, SetTo, 0, 16711680),
+		SetMemoryX(6702948, SetTo, 0, 255),
+		*/
+		// unit 96
+		SetMemoryX(6696704, SetTo, 166, 255)
+	);
+	if(Switch("game_hard", Set)) {
+		supply_increase = 10;
+	}
+}
+
+const supply = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+function loop1_normal() {
+	if(main.mutatorEnabled[18]) { // shared_supply
+		once {
+			supply[0] = 300;
+			supply[3] = 300;
+		}
+		foreach(player : EUDLoopPlayer(force=Force1)) {
+			if(Kills(player, AtLeast, 1, 96)) {
+				SetMemoryEPD(EPD(0x588AA4) + player, Subtract, 1);
+				supply[0] += supply_increase;
+				messages.announce_critter_hunt(player);
+			}
+			if(!constants.is_computer[player]) {
+				SetMemoryEPD(EPD(0x5821D4) + player, SetTo, supply[0]);
+				SetMemoryEPD(EPD(0x582264) + player, SetTo, supply[0]);
+				SetMemoryEPD(EPD(0x582144) + player, SetTo, supply[0]);
+			}
+		}
+		foreach(player : EUDLoopPlayer(force=Force2)) {
+			if(Kills(player, AtLeast, 1, 96)) {
+				SetMemoryEPD(EPD(0x588AA4) + player, Subtract, 1);
+				supply[3] += supply_increase;
+				messages.announce_critter_hunt(player);
+			}
+			if(!constants.is_computer[player]) {
+				SetMemoryEPD(EPD(0x5821D4) + player, SetTo, supply[3]);
+				SetMemoryEPD(EPD(0x582264) + player, SetTo, supply[3]);
+				SetMemoryEPD(EPD(0x582144) + player, SetTo, supply[3]);
+			}
+		}
+	}
+	else {
+		foreach(player : EUDLoopPlayer()) {
+			if(Kills(player, AtLeast, 1, 96)) {
+				SetMemoryEPD(EPD(0x588AA4) + player, Subtract, 1);
+				supply[player] += supply_increase;
+				messages.announce_critter_hunt(player);
+			}
+			if(!constants.is_computer[player]) {
+				if(MemoryXEPD(EPD(0x57EEE8) + player * 9, Exactly, 256, 0x0000FF00)) {
+					SetMemoryEPD(EPD(0x5821D4) + player, SetTo, supply[player]);
+				}
+				else if(MemoryXEPD(EPD(0x57EEE8) + player * 9, Exactly, 512, 0x0000FF00)) {
+					SetMemoryEPD(EPD(0x582264) + player, SetTo, supply[player]);
+				}
+				else {
+					SetMemoryEPD(EPD(0x582144) + player, SetTo, supply[player]);
+				}
+			}
+		}
+	}
+}
+
+function loop8_normal() {
+	if(ElapsedTime(AtMost, 425)) {
+		if(Command(P9, AtMost, 24, 96)) {
+			const x1, y1 = utils.get_force1_loc();
+			setloc($L("shared"), x1, y1);
+			utils.safe_spawn(1, 96, P7, "shared", "buffer");
+			GiveUnits(All, 96, P7, "Anywhere", P9);
+			const x2, y2 = utils.get_force2_loc();
+			setloc($L("shared"), x2, y2);
+			utils.safe_spawn(1, 96, P7, "shared", "buffer");
+			GiveUnits(All, 96, P7, "Anywhere", P9);
+		}
+	}
+	else {
+		if(Command(P9, AtMost, 35, 96)) {
+			const x, y = utils.get_neutral_loc();
+			setloc($L("shared"), x, y);
+			utils.safe_spawn(1, 96, P7, "shared", "buffer");
+			GiveUnits(All, 96, P7, "Anywhere", P9);
+			utils.safe_spawn(1, 96, P7, "shared", "buffer");
+			GiveUnits(All, 96, P7, "Anywhere", P9);
+		}
+	}
+}

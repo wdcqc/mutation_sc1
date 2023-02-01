@@ -1,0 +1,16 @@
+[main]
+input: ../scmd/input.scx
+output: ../output/mutation_autocom.scx
+[DataEditor.py]
+[ExtraDataEditor.py]
+[dataDumper]
+../ai/aiscript.bin : 0x68C104, copy
+
+[TriggerEditor\main.eps]
+[TriggerEditor\auto_com.py]
+
+
+[freeze]
+[unlimiter]
+
+

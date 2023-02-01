@@ -1,0 +1,48 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+}
+
+var timer = 0;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, 600)) {
+		timer += 1;
+	}
+	if(ElapsedTime(AtLeast, 1200)) {
+		timer += 1;
+	}
+	if(ElapsedTime(AtLeast, 1800)) {
+		timer += 1;
+	}
+	if(ElapsedTime(AtLeast, 2400)) {
+		timer += 1;
+	}
+	if(ElapsedTime(AtLeast, 3000)) {
+		timer += 1;
+	}
+	if(ElapsedTime(AtLeast, 3600)) {
+		timer += 1;
+	}
+	if(timer >= 6) {
+		timer -= 6;
+		const x, y = utils.get_central_loc();
+		setloc("shared", x, y);
+		
+		const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+		if(spawn_ptr > 0) {
+			CreateUnit(1, 50, "buffer", P7);
+			const cm = EPDCUnitMap(spawn_epd);
+			if(cm.unitType == 50 && cm.hp > 0) {
+				cm.removeTimer = 3600;
+				if(Switch("game_hard", Set)) {
+					cm.removeTimer = 25000;
+				}
+				MoveUnit(All, 50, P7, "buffer", "shared");
+				cm.orderID = 187;
+				cm.orderState = 0;
+				RemoveUnitAt(All, 50, "buffer", P7);
+			}
+		}
+	}
+}

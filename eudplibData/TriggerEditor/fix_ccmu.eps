@@ -1,0 +1,145 @@
+import PluginVariables as msqcvar;
+import utils;
+import constants;
+
+var nextFixCCMUDelay = 0;
+function attempt_to_fix_ccmu() {
+	if(nextFixCCMUDelay > 0) {
+		nextFixCCMUDelay -= 1;
+		return;
+	}
+	if(MemoryEPD(EPD(0x628438), Exactly, 0)) { // is_ccmu
+		var solved = 0;
+		var player_loop = 0;
+		while(player_loop < 8) {
+			var ucnt1 = 0;
+			var ucnt2 = 0;
+			var ucnt3 = 0;
+			foreach(ptr, epd : EUDLoopPlayerUnit(player_loop)) {
+				const cm = EPDCUnitMap(epd);
+				if(cm.hp == 0 && cm.orderID != 0 && cm.removeTimer == 0) {
+					cm.removeTimer = 1;
+				}
+				else if(cm.unitType == 109 && Command(player_loop, AtLeast, 25, 109)) { // depot
+					ucnt1++;
+					if(ucnt1 >= 10) {
+						SetMemoryEPD(EPD(0x5821D4) + player_loop, Add, 16);
+						cm.removeTimer = 1;
+						ucnt1 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 13) {
+					ucnt2++;
+					if(ucnt2 >= 4) {
+						cm.removeTimer = 1;
+						ucnt2 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 124 && Command(player_loop, AtLeast, 30, 124)) { // turret
+					ucnt3++;
+					if(ucnt3 >= 16) {
+						cm.removeTimer = 1;
+						ucnt3 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 144 && Command(player_loop, AtLeast, 30, 144)) { // spore
+					ucnt3++;
+					if(ucnt3 >= 16) {
+						cm.removeTimer = 1;
+						ucnt3 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 42) {
+					if(Command(player_loop, AtLeast, 40, 42) && utils.is_in_neutral_zone(cm.posX, cm.posY)) {
+						ucnt1++;
+						if(ucnt1 >= 10) {
+							SetMemoryEPD(EPD(0x582144) + player_loop, Add, 16);
+							cm.removeTimer = 1;
+							ucnt1 = 0;
+							solved = 1;
+						}
+					}
+				}
+				else if(cm.unitType == 45 && constants.is_computer[player_loop]) {
+					ucnt2++;
+					if(Command(player_loop, AtLeast, 4, 45) && ucnt2 >= 2) {
+						cm.removeTimer = 1;
+						solved = 1;
+						ucnt2 = 0;
+					}
+				}
+				else if(cm.unitType == 37 && constants.is_computer[player_loop]) {
+					ucnt2++;
+					if(ucnt2 >= 6) {
+						cm.removeTimer = 1;
+						ucnt2 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 35 && solved == 0) {
+					ucnt2++;
+					if(ucnt2 >= 9) {
+						cm.removeTimer = 1;
+						ucnt2 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 162 && Command(player_loop, AtLeast, 30, 162)) {
+					ucnt1++;
+					if(ucnt1 >= 8) {
+						cm.removeTimer = 1;
+						ucnt1 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 85) {
+					ucnt2++;
+					if(ucnt2 >= 5) {
+						cm.removeTimer = 1;
+						ucnt2 = 0;
+						solved = 1;
+					}
+				}
+				else if(cm.unitType == 73 && constants.is_computer[player_loop]) {
+					ucnt3++;
+					if(ucnt3 >= 20) {
+						cm.removeTimer = 1;
+						ucnt3 = 0;
+						solved = 1;
+					}
+				}
+			}
+			player_loop++;
+		}
+		if(solved == 1) {
+			SetMemory(6559128, SetTo, 0);
+		}
+		else {
+			player_loop = 0;
+			while(player_loop < 6) {
+				if(Command(player_loop, AtLeast, 8, 109)) {
+					RemoveUnitAt(1, 109, "Anywhere", player_loop);
+					SetMemoryEPD(EPD(0x5821D4) + player_loop, Add, 16);
+					solved = 1;
+				}
+				else if(Command(player_loop, AtLeast, 8, 42)) {
+					RemoveUnitAt(1, 42, "Anywhere", player_loop);
+					SetMemoryEPD(EPD(0x582144) + player_loop, Add, 16);
+					solved = 1;
+				}
+				else if(Command(player_loop, AtLeast, 16, 35)) {
+					RemoveUnitAt(1, 35, "Anywhere", player_loop);
+					solved = 1;
+				}
+				player_loop++;
+			}
+		}
+		if(solved == 0) {
+			nextFixCCMUDelay = 12;
+		}
+	}
+}

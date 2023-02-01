@@ -1,0 +1,74 @@
+import PluginVariables as msqcvar;
+import utils;
+
+function init() {
+	// dashed circle 573
+	SetMemory(6747452, SetTo, 330);
+}
+
+const lava_spots_x = EUDArray(11);
+const lava_spots_y = EUDArray(11);
+var lava_count = 0;
+var lava_state = 0;
+function reset_lava_pos() {
+	if(ElapsedTime(AtMost, 1200)) {
+		lava_count = 3;
+	}
+	else if(ElapsedTime(AtMost, 2000)) {
+		lava_count = 5;
+	}
+	else if(ElapsedTime(AtMost, 2800)) {
+		lava_count = 7;
+	}
+	else if(ElapsedTime(AtMost, 3600)) {
+		lava_count = 9;
+	}
+	else {
+		lava_count = 11;
+	}
+	
+	for(var i = 0; i<lava_count; i++) {
+		lava_spots_x[i], lava_spots_y[i] = utils.get_neutral_loc();
+	}
+}
+
+
+function loop1_normal() {
+	if(lava_count == 0 && ElapsedTime(AtLeast, 240)) {
+		reset_lava_pos();
+	}
+	if(lava_count > 0) {
+		lava_state += 1;
+	}
+	if(lava_state >= 170) {
+		lava_state = 0;
+		reset_lava_pos();
+	}
+	
+	if(lava_state == 1 || lava_state == 7 || lava_state == 13 || lava_state == 19 || lava_state == 25 || lava_state == 31) {
+		for(var i = 0; i<lava_count; i++) {
+			setloc($L("lava"), lava_spots_x[i], lava_spots_y[i]);
+			utils.scan_image(573, "lava", 17, 13);
+		}
+	}
+	else if(lava_state >= 51) {
+		DoActions(
+			SetMemoryX(6701564, SetTo, 4, 4),
+			SetMemoryX(6697388, SetTo, 251658240, -16777216),
+			SetMemoryX(6697620, SetTo, 16777216, -16777216)
+		);
+		for(var i = 0; i<lava_count; i++) {
+			setloc($L("lava"), lava_spots_x[i], lava_spots_y[i]);
+			dilateloc($L("lava"), 24, 24);
+			CreateUnitWithProperties(1, 95, "lava", P7, UnitProperty(invincible=True));
+			KillUnitAt(All, "(men)", "lava", Force1);
+			KillUnitAt(All, "(men)", "lava", Force2);
+		}
+		DoActions(
+			KillUnit(95, P7),
+			SetMemoryX(6701564, SetTo, 0, 4),
+			SetMemoryX(6697388, SetTo, 67108864, -16777216),
+			SetMemoryX(6697620, SetTo, 117440512, -16777216)
+		);
+	}
+}

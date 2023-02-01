@@ -1,0 +1,876 @@
+import PluginVariables as msqcvar;
+import main;
+import daily_seed;
+import constants;
+
+function announce_gift_exchange(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	PlayWAVAll("sound/misc/door/door4opn.wav");
+	printAll("\x0e◇ {:c}{:n} \x17has acquired a gift! \x1C(+1 weapon/armor upgrades)", player, player);
+	setcurpl(v);
+}
+
+function announce_gift_exchange_spawn() {
+	MinimapPingAll("shared");
+	PlayWAVAll("sound/misc/pbldgplc.wav");
+	printAll("\x0e◇ \x17A wild gift appears!");
+}
+
+function announce_lucky_envelope(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	PlayWAVAll("sound/misc/door/door3cls.wav");
+	printAll("\x0e◇ {:c}{:n} \x17received a lucky envelope! \x08(+888 minerals and gas)", player, player);
+	setcurpl(v);
+}
+
+function announce_boom_bots(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(player);
+	MinimapPing("shared");
+	PlayWAV("sound/Bullet/TNsFir00.wav");
+	DisplayText("\x08WARNING: \x17An enemy \x11Boom Bot \x17appears! \x1C(Destroy with any spell)", 4);
+	setcurpl(v);
+}
+
+function announce_propagator(player : TrgPlayer, loc : TrgLocation) {
+	const v = getcurpl();
+	setcurpl(player);
+	PlayWAV("sound/zerg/broodling/zbrpss01.wav");
+	DisplayText("\x0e◇ \x17You received a propagator! \x18(Attack enemy units to copy itself)", 4);
+	MinimapPing(loc);
+	setcurpl(v);
+}
+
+function announce_drop_pod() {
+	MinimapPingAll("drop_pod");
+}
+
+function announce_void_reanimator() {
+	PlayWAV("sound\Protoss\SHUTTLE\PShPss04.WAV");
+	DisplayText("\x0e◇ \x17You received a void reanimator! \x1C(Dead units may respawn at its position)", 4);
+	MinimapPing("shared");
+}
+
+function announce_halloween(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(player);
+	MinimapPing("shared");
+	PlayWAV("sound/zerg/ultra/zulpss00.wav");
+	DisplayText("\x08WARNING: \x17There is no treats in the bowl! Civilian enraged to become an enemy. \x15(Buy treat at the beacon for 50 minerals)", 4);
+	setcurpl(v);
+}
+
+function announce_order_cost(player : TrgPlayer, cost) {
+	const v = getcurpl();
+	setcurpl(player);
+	eprintf("\x0fMicro Transactions \x0e◇ \x04Ordering unit(s) cost \x11{} \x04minerals.", cost);
+	setcurpl(v);
+}
+
+function announce_order_cost_end(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(player);
+	eprintf(" ");
+	setcurpl(v);
+}
+
+function announce_critter_hunt(player : TrgPlayer) {
+	const v = getcurpl();
+	setcurpl(player);
+	PlayWAV("sound/misc/critters/pbwht03.wav");
+	DisplayText("\x0e◇ \x17You have killed an Ursadon! \x08(Supply increased)", 4);
+	setcurpl(v);
+}
+
+function leaderboard_kills() {
+	LeaderBoardKills("(any unit)", "\x17Kills");
+	if(constants.has_computer()) {
+		LeaderBoardComputerPlayers(Enable);
+	}
+	else {
+		LeaderBoardComputerPlayers(Disable);
+	}
+}
+
+const objective_buffer = StringBuffer(5000);
+function generate_mission_objectives() {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	if(main.is_random_mode) {
+		if(main.hard_mode) {
+			objective_buffer.insertf(0, "\x1bRandom Mutation (Hard)\n");
+		}
+		else {
+			objective_buffer.insertf(0, "\x1bRandom Mutation\n");
+		}
+	}
+	else {
+		if(main.hard_mode) {
+			objective_buffer.insertf(0, "\x1bDaily Mutation (Hard) \x1c#{}\n", daily_seed.day_count);
+		}
+		else {
+			objective_buffer.insertf(0, "\x1bDaily Mutation \x1c#{}\n", daily_seed.day_count);
+		}
+	}
+	
+	if(main.mutatorEnabled[1]) {
+		objective_buffer.append("\x0fPolarity\x0e◇\x19Each type of enemy unit is immune to a player's units, reviving when killed.\n");
+	}
+	if(main.mutatorEnabled[2]) {
+		objective_buffer.append("\x0fSlim Pickings\x0e◇\x19Worker gather at lower rate & resource pickings spawn randomly.\n");
+	}
+	if(main.mutatorEnabled[3]) {
+		objective_buffer.append("\x0fMicro Transactions\x0e◇\x19Ordering your units cost minerals.\n");
+	}
+	if(main.mutatorEnabled[4]) {
+		objective_buffer.append("\x0fLaser Drill\x0e◇\x19A laser drill attacks everything that enters its sight.\n");
+	}
+	if(main.mutatorEnabled[5]) {
+		objective_buffer.append("\x0fPurifier Beam\x0e◇\x19Purifier Beam moves randomly toward nearby player units.\n");
+	}
+	if(main.mutatorEnabled[6]) {
+		objective_buffer.append("\x0fJust Die\x0e◇\x19Units have a chance to respawn on death.\n");
+	}
+	if(main.mutatorEnabled[7]) {
+		objective_buffer.append("\x0fFear\x0e◇\x19Units run around in fear upon taking damage.\n");
+	}
+	if(main.mutatorEnabled[8]) {
+		objective_buffer.append("\x0fGoing Nuclear\x0e◇\x19Nukes are launched at random throughout the map.\n");
+	}
+	if(main.mutatorEnabled[9]) {
+		objective_buffer.append("\x0fSelf Destruction\x0e◇\x19All units explode and deal damage upon death.\n");
+	}
+	if(main.mutatorEnabled[10]) {
+		objective_buffer.append("\x0fWe Move Unseen\x0e◇\x19All units are permanently cloaked.\n");
+	}
+	if(main.mutatorEnabled[11]) {
+		objective_buffer.append("\x0fMineral Shields\x0e◇\x19Minerals are randomly shielded at times.\n");
+	}
+	if(main.mutatorEnabled[12]) {
+		objective_buffer.append("\x0fDouble Edged\x0e◇\x19Units lose health when attacking, and heal back when idle.\n");
+	}
+	if(main.mutatorEnabled[13]) {
+		objective_buffer.append("\x0fMoment of Silence\x0e◇\x19Tough units may leave enemy units unable to attack when they die.\n");
+	}
+	if(main.mutatorEnabled[14]) {
+		objective_buffer.append("\x0fMutually Assured Destruction\x0e◇\x19Tough units may detonate a Nuke upon death.\n");
+	}
+	if(main.mutatorEnabled[15]) {
+		objective_buffer.append("\x0fVoid Rifts\x0e◇\x19Void Rifts appear randomly and spawn units until destroyed. \n");
+	}
+	if(main.mutatorEnabled[16]) {
+		objective_buffer.append("\x0fPower Overwhelming\x0e◇\x19All units have energy; ranged units trigger spells randomly when attacking.\n");
+	}
+	if(main.mutatorEnabled[17]) {
+		objective_buffer.append("\x0fTransmutation\x0e◇\x19Units become hero after killing.\n");
+	}
+	if(main.mutatorEnabled[18]) {
+		objective_buffer.append("\x0fSharing is Caring\x0e◇\x19Each force shares their supplies.\n");
+	}
+	if(main.mutatorEnabled[19]) {
+		objective_buffer.append("\x0fDiffusion\x0e◇\x19All ranged units have reduced damage but with a large splash range.\n");
+	}
+	if(main.mutatorEnabled[20]) {
+		objective_buffer.append("\x0fBlack Death\x0e◇\x19Some units carry a parasite which damages host and spreads when host dies.\n");
+	}
+	if(main.mutatorEnabled[21]) {
+		objective_buffer.append("\x0fAvenger\x0e◇\x19Units restore HP and get increased attack speed when other nearby units die. \n");
+	}
+	if(main.mutatorEnabled[22]) {
+		objective_buffer.append("\x0fEvasive Maneuvers\x0e◇\x19Units may teleport a short distance away upon taking damage.\n");
+	}
+	if(main.mutatorEnabled[23]) {
+		objective_buffer.append("\x0fFatal Attraction\x0e◇\x19When enemy units die, your nearby units are pulled to their location. \n");
+	}
+	if(main.mutatorEnabled[24]) {
+		objective_buffer.append("\x0fPropagators\x0e◇\x19Sludges crawl towards you, turning anything they touch into their copy. \n");
+	}
+	if(main.mutatorEnabled[25]) {
+		objective_buffer.append("\x0fScorched Earth\x0e◇\x19Units set the terrain on fire upon death.\n");
+	}
+	if(main.mutatorEnabled[26]) {
+		objective_buffer.append("\x0fPhoton Overload\x0e◇\x19All structures attack nearby hostile units.\n");
+	}
+	if(main.mutatorEnabled[27]) {
+		objective_buffer.append("\x0fTrick or Treat\x0e◇\x19Civs visit a candy bowl for treats. If no treats they turn into enemies.\n");
+	}
+	if(main.mutatorEnabled[28]) {
+		objective_buffer.append("\x0fUrsadon Shoot\x0e◇\x19Supply are only generated by killing ursadons throughout the map.\n");
+	}
+	if(main.mutatorEnabled[29]) {
+		objective_buffer.append("\x0fGift Exchange\x0e◇\x19Gifts are periodically deployed on map. Getting them gives +1 damage/armor upgrades\n");
+	}
+	if(main.mutatorEnabled[30]) {
+		objective_buffer.append("\x0fLucky Envelopes\x0e◇\x19Festive envelopes containing resource pickups are dropped randomly on map.\n");
+	}
+	if(main.mutatorEnabled[31]) {
+		objective_buffer.append("\x0fAfraid of the Dark\x0e◇\x19Vision is extremely limited except when in view of your camera.\n");
+	}
+	if(main.mutatorEnabled[32]) {
+		objective_buffer.append("\x0fSpeed Freaks\x0e◇\x19All unit are sped up by 50%.\n");
+	}
+	if(main.mutatorEnabled[33]) {
+		objective_buffer.append("\x0fBoom Bots\x0e◇\x19Boom Bots carry a nuclear payload toward your base. Disarm by using a spell.\n");
+	}
+	if(main.mutatorEnabled[34]) {
+		objective_buffer.append("\x0fAggressive Deployment\x0e◇\x19Additional units are periodically deployed onto the battlefield.\n");
+	}
+	if(main.mutatorEnabled[35]) {
+		objective_buffer.append("\x0fAlien Incubation\x0e◇\x19All units spawn Broodlings upon death.\n");
+	}
+	if(main.mutatorEnabled[36]) {
+		objective_buffer.append("\x0fShortsighted\x0e◇\x19Player units and structures have reduced vision range.\n");
+	}
+	if(main.mutatorEnabled[37]) {
+		objective_buffer.append("\x0fConcussive Attacks\x0e◇\x19Units are slowed by all enemy attacks.\n");
+	}
+	if(main.mutatorEnabled[38]) {
+		objective_buffer.append("\x0fMinesweeper\x0e◇\x19Spider Mines are spawned throughout the battlefield. \n");
+	}
+	if(main.mutatorEnabled[39]) {
+		objective_buffer.append("\x0fLife Leech\x0e◇\x19Units steal life whenever they do damage.\n");
+	}
+	if(main.mutatorEnabled[40]) {
+		objective_buffer.append("\x0fMissile Command\x0e◇\x19Endless missile bombardments target your structures and must be shot down.\n");
+	}
+	if(main.mutatorEnabled[41]) {
+		objective_buffer.append("\x0fVertigo\x0e◇\x19Your camera randomly changes positions.\n");
+	}
+	if(main.mutatorEnabled[42]) {
+		objective_buffer.append("\x0fVoid Reanimators\x0e◇\x19Dead units have a chance to respawn at the Void Reanimator.\n");
+	}
+	if(main.mutatorEnabled[43]) {
+		objective_buffer.append("\x0fHeroes From the Storm\x0e◇\x19Attack waves will be joined by heroes of increasing power.\n");
+	}
+	if(main.mutatorEnabled[44]) {
+		objective_buffer.append("\x0fEminent Domain\x0e◇\x19Enemies gain control of your structures after destroying them.\n");
+	}
+	if(main.mutatorEnabled[45]) {
+		objective_buffer.append("\x0fOrbital Strike\x0e◇\x19Orbital Strikes are periodically fired throughout the map.\n");
+	}
+	if(main.mutatorEnabled[46]) {
+		objective_buffer.append("\x0fNaughty List\x0e◇\x19Units lose health over time if they have 5 kills.\n");
+	}
+	if(main.mutatorEnabled[47]) {
+		objective_buffer.append("\x0fKill Bots\x0e◇\x19Kill Bots attack players and are invulnerable to damage until they have killed 5 units.\n");
+	}
+	if(main.mutatorEnabled[48]) {
+		objective_buffer.append("\x0fLava Burst\x0e◇\x19Lava periodically bursts from the ground and deals damage to air and ground units.\n");
+	}
+	if(main.mutatorEnabled[49]) {
+		objective_buffer.append("\x0fTime Rift\x0e◇\x19Time Rifts are periodically deployed throughout the map.\n");
+	}
+	if(main.mutatorEnabled[50]) {
+		objective_buffer.append("\x0fBarrier\x0e◇\x19Units gain a temporary shield upon the first time they take damage.\n");
+	}
+	if(main.mutatorEnabled[51]) {
+		objective_buffer.append("\x0fTwister\x0e◇\x19Tornadoes move across the map, pulling in and killing player units in their path. \n");
+	}
+	if(main.mutatorEnabled[52]) {
+		objective_buffer.append("\x0fRapid Fire\x0e◇\x19All units have increased attack speed.\n");
+	}
+	if(main.mutatorEnabled[53]) {
+		objective_buffer.append("\x0fOutbreak\x0e◇\x19Infested Terrans wander on the battlefield.\n");
+	}
+	if(main.mutatorEnabled[54]) {
+		objective_buffer.append("\x0fWalking Infested\x0e◇\x19Dead units may spawn infested terrans.\n");
+	}
+	foreach(player : EUDLoopPlayer()) {
+		setcurpl(player);
+		SetMissionObjectives(objective_buffer.StringIndex);
+	}
+	setcurpl(P8);
+	SetMissionObjectives(objective_buffer.StringIndex);
+	for(var obplayer = 128; obplayer < 132; obplayer++) {
+		setcurpl(obplayer);
+		SetMissionObjectives(objective_buffer.StringIndex);
+	}
+	setcurpl(v);
+}
+
+const welcome_buffer = StringBuffer(6000);
+
+function append_mutator_info(n) {
+	switch(n) {
+		case 1:
+			welcome_buffer.append("\x0fPolarity \x0e◇ \x19Each type of enemy unit is immune to either you or your ally's units. Immuned units will instantly revive when killed.");
+		break;
+		case 2:
+			welcome_buffer.append("\x0fSlim Pickings \x0e◇ \x19Worker gather at a reduced rate, but resource pickings spawn randomly throughout the map.");
+		break;
+		case 3:
+			welcome_buffer.append("\x0fMicro Transactions \x0e◇ \x19Ordering your units cost minerals.");
+		break;
+		case 4:
+			welcome_buffer.append("\x0fLaser Drill \x0e◇ \x19A laser drill attacks everything entering its sight.");
+		break;
+		case 5:
+			welcome_buffer.append("\x0fPurifier Beam \x0e◇ \x19A Purifier Beam moves across the map toward nearby player units.");
+		break;
+		case 6:
+			welcome_buffer.append("\x0fJust Die \x0e◇ \x19Units may revive instantly when they're dead.");
+		break;
+		case 7:
+			welcome_buffer.append("\x0fFear \x0e◇ \x19Player units run around in fear upon taking damage.");
+		break;
+		case 8:
+			welcome_buffer.append("\x0fGoing Nuclear \x0e◇ \x19Nukes are launched at random throughout the map.");
+		break;
+		case 9:
+			welcome_buffer.append("\x0fSelf Destruction \x0e◇ \x19Everything explodes and deals damage upon death.");
+		break;
+		case 10:
+			welcome_buffer.append("\x0fWe Move Unseen \x0e◇ \x19All units are permanently cloaked.");
+		break;
+		case 11:
+			welcome_buffer.append("\x0fMineral Shields \x0e◇ \x19Minerals are randomly shielded, which player must destroy to continue gathering.");
+		break;
+		case 12:
+			welcome_buffer.append("\x0fDouble Edged \x0e◇ \x19Units lose health when attacking, and heal back when idle.");
+		break;
+		case 13:
+			welcome_buffer.append("\x0fMoment of Silence \x0e◇ \x19Tough units have a chance to leave hostile units unable to attack when they die.");
+		break;
+		case 14:
+			welcome_buffer.append("\x0fMutually Assured Destruction \x0e◇ \x19Heroes and 4+ supply units have a chance to detonate a Nuke upon death.");
+		break;
+		case 15:
+			welcome_buffer.append("\x0fVoid Rifts \x0e◇ \x19Void Rifts appear randomly and spawn enemy units until destroyed.");
+		break;
+		case 16:
+			welcome_buffer.append("\x0fPower Overwhelming \x0e◇ \x19All units have energy; ranged units trigger spells randomly when attacking.");
+		break;
+		case 17:
+			welcome_buffer.append("\x0fTransmutation \x0e◇ \x19Units become hero when they kill a certain number of units.");
+		break;
+		case 18:
+			welcome_buffer.append("\x0fSharing is Caring \x0e◇ \x19Each force shares their supplies.");
+		break;
+		case 19:
+			welcome_buffer.append("\x0fDiffusion \x0e◇ \x19All ranged units have reduced damage, but with a large splash range.");
+		break;
+		case 20:
+			welcome_buffer.append("\x0fBlack Death \x0e◇ \x19Some units carry a deadly parasite which damages host and spreads when host is dead.");
+		break;
+		case 21:
+			welcome_buffer.append("\x0fAvenger \x0e◇ \x19Units restore HP and get increased attack speed when other nearby units die.");
+		break;
+		case 22:
+			welcome_buffer.append("\x0fEvasive Maneuvers \x0e◇ \x19Units may teleport a short distance away upon taking damage.");
+		break;
+		case 23:
+			welcome_buffer.append("\x0fFatal Attraction \x0e◇ \x19When enemy units die, your nearby units are pulled to their location. ");
+		break;
+		case 24:
+			welcome_buffer.append("\x0fPropagators \x0e◇ \x19Reality warping sludges crawl towards you, turning anything they touch into their copy. ");
+		break;
+		case 25:
+			welcome_buffer.append("\x0fScorched Earth \x0e◇ \x19Units set terrain on fire upon death.");
+		break;
+		case 26:
+			welcome_buffer.append("\x0fPhoton Overload \x0e◇ \x19All structures attack nearby hostile units.");
+		break;
+		case 27:
+			welcome_buffer.append("\x0fTrick or Treat \x0e◇ \x19Civs visit a candy bowl for treats (bought for 50 minerals). If there's no treats they turn into enemy units. ");
+		break;
+		case 28:
+			welcome_buffer.append("\x0fUrsadon Shoot \x0e◇ \x19Supply can only be generated by killing ursadons that wander throughout the map.");
+		break;
+		case 29:
+			welcome_buffer.append("\x0fGift Exchange \x0e◇ \x19Gifts are periodically deployed around the map. Claiming them gives +1 weapon/armor upgrades.");
+		break;
+		case 30:
+			welcome_buffer.append("\x0fLucky Envelopes \x0e◇ \x19Festive envelopes containing resource pickups are dropped at random throughout the map.");
+		break;
+		case 31:
+			welcome_buffer.append("\x0fAfraid of the Dark \x0e◇ \x19Vision provided by all sources is extremely limited except when in view of your camera.");
+		break;
+		case 32:
+			welcome_buffer.append("\x0fSpeed Freaks \x0e◇ \x19All units are sped up by 50%.");
+		break;
+		case 33:
+			welcome_buffer.append("\x0fBoom Bots \x0e◇ \x19Boom Bots carry a nuclear payload toward your base. Disarm them by using a spell.");
+		break;
+		case 34:
+			welcome_buffer.append("\x0fAggressive Deployment \x0e◇ \x19Additional units are periodically deployed onto the battlefield.");
+		break;
+		case 35:
+			welcome_buffer.append("\x0fAlien Incubation \x0e◇ \x19All units spawn Broodlings upon death.");
+		break;
+		case 36:
+			welcome_buffer.append("\x0fShortsighted \x0e◇ \x19Player units and structures have reduced vision range.");
+		break;
+		case 37:
+			welcome_buffer.append("\x0fConcussive Attacks \x0e◇ \x19Player units are slowed by all enemy attacks.");
+		break;
+		case 38:
+			welcome_buffer.append("\x0fMinesweeper \x0e◇ \x19Spider Mines are spawned throughout the battlefield. ");
+		break;
+		case 39:
+			welcome_buffer.append("\x0fLife Leech \x0e◇ \x19Units steal life whenever they do damage.");
+		break;
+		case 40:
+			welcome_buffer.append("\x0fMissile Command \x0e◇ \x19Endless missile bombardments target your structures and must be shot down throughout the mission.");
+		break;
+		case 41:
+			welcome_buffer.append("\x0fVertigo \x0e◇ \x19Your camera randomly changes positions.");
+		break;
+		case 42:
+			welcome_buffer.append("\x0fVoid Reanimators \x0e◇ \x19Void Reanimators wander the battlefield. Dead units have a chance to respawn at the Reanimator.");
+		break;
+		case 43:
+			welcome_buffer.append("\x0fHeroes From the Storm \x0e◇ \x19Attack waves will be joined by heroes of increasing power.");
+		break;
+		case 44:
+			welcome_buffer.append("\x0fEminent Domain \x0e◇ \x19Enemies gain control of your structures after destroying them.");
+		break;
+		case 45:
+			welcome_buffer.append("\x0fOrbital Strike \x0e◇ \x19Orbital Strikes are periodically fired throughout the map.");
+		break;
+		case 46:
+			welcome_buffer.append("\x0fNaughty List \x0e◇ \x19Units lose health over time if they have 5 kills or more.");
+		break;
+		case 47:
+			welcome_buffer.append("\x0fKill Bots \x0e◇ \x19Waves of bots attack players and are invulnerable to damage until they have killed 5 units.");
+		break;
+		case 48:
+			welcome_buffer.append("\x0fLava Burst \x0e◇ \x19Lava periodically bursts from the ground at random locations and kills air and ground units.");
+		break;
+		case 49:
+			welcome_buffer.append("\x0fTime Rift \x0e◇ \x19Time Rifts are periodically deployed throughout the map.");
+		break;
+		case 50:
+			welcome_buffer.append("\x0fBarrier \x0e◇ \x19Units gain a temporary shield upon the first time they take damage.");
+		break;
+		case 51:
+			welcome_buffer.append("\x0fTwister \x0e◇ \x19Tornadoes move across the map, pulling in and killing player units in their path. ");
+		break;
+		case 52:
+			welcome_buffer.append("\x0fRapid Fire \x0e◇ \x19All units have increased attack speed.");
+		break;
+		case 53:
+			welcome_buffer.append("\x0fOutbreak \x0e◇ \x19Infested Terrans wander on the battlefield.");
+		break;
+		case 54:
+			welcome_buffer.append("\x0fWalking Infested \x0e◇ \x19Dead units have a chance to spawn infested terrans.");
+		break;
+	}
+}
+
+function generate_welcome() {
+	const v = getcurpl();
+	// seems this fixes the str bug
+	setcurpl(getuserplayerid());
+	if(main.is_random_mode) {
+		if(main.hard_mode) {
+			welcome_buffer.insertf(0, "\n\n\n\n\x1bRandom Mutation (Hard) \x1c\n");
+		}
+		else {
+			welcome_buffer.insertf(0, "\n\n\n\n\x1bRandom Mutation \x1c\n");
+		}
+	}
+	else {
+		if(main.hard_mode) {
+			welcome_buffer.insertf(0, "\n\n\n\n\x1bDaily Mutation (Hard) \x1c#{}\n", daily_seed.day_count);
+		}
+		else {
+			welcome_buffer.insertf(0, "\n\n\n\n\x1bDaily Mutation \x1c#{}\n", daily_seed.day_count);
+		}
+	}
+	welcome_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+	welcome_buffer.append("\x1dMutators:\n");
+	
+	// use 1 to 70 in case new mutator gets added
+	for(var i = 1; i < 70; i++) {
+		if(main.mutatorEnabled[i]) {
+			append_mutator_info(i);
+			welcome_buffer.append("\n");
+		}
+	}
+	
+	welcome_buffer.append("\n\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	welcome_buffer.append("\x04Check \x19Mission Objectives \x11[F10 + J] \x04for mutation info.");
+	foreach(player : EUDLoopPlayer()) {
+		setcurpl(player);
+		DisplayText(welcome_buffer.StringIndex, 4);
+	}
+	setcurpl(P8);
+	DisplayText(welcome_buffer.StringIndex, 4);
+	for(var obplayer = 128; obplayer < 132; obplayer++) {
+		setcurpl(obplayer);
+		DisplayText(welcome_buffer.StringIndex, 4);
+	}
+	setcurpl(v);
+}
+
+var simple_welcome_bar = 0;
+var simple_bar_lb = 4;
+function simple_welcome_add_bar() {
+	// initially I tried to make it linebreak each X mutators, but it turned out bad.
+	if(simple_welcome_bar == simple_bar_lb) {
+		objective_buffer.append(" \x1c+\n");
+		simple_welcome_bar = 0;
+	}
+	else if(simple_welcome_bar > 0) {
+		objective_buffer.append(" \x1c+ ");
+	}
+	simple_welcome_bar += 1;
+}
+
+function simple_objective_buffer_generate() {
+	var bar = 0;
+	if(main.total_mutators_enabled == 0) {
+		objective_buffer.insert(0, "\x1dNo mutation");
+	}
+	else {
+		objective_buffer.insert(0, "\x1dMutators:\n");
+	}
+	if(main.mutatorEnabled[1]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fPolarity");
+	}
+	if(main.mutatorEnabled[2]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fSlim Pickings");
+	}
+	if(main.mutatorEnabled[3]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMicro Transactions");
+	}
+	if(main.mutatorEnabled[4]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fLaser Drill");
+	}
+	if(main.mutatorEnabled[5]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fPurifier Beam");
+	}
+	if(main.mutatorEnabled[6]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fJust Die");
+	}
+	if(main.mutatorEnabled[7]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fFear");
+	}
+	if(main.mutatorEnabled[8]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fGoing Nuclear");
+	}
+	if(main.mutatorEnabled[9]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fSelf Destruction");
+	}
+	if(main.mutatorEnabled[10]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fWe Move Unseen");
+	}
+	if(main.mutatorEnabled[11]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMineral Shields");
+	}
+	if(main.mutatorEnabled[12]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fDouble Edged");
+	}
+	if(main.mutatorEnabled[13]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMoment of Silence");
+	}
+	if(main.mutatorEnabled[14]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMutually Assured Destruction");
+	}
+	if(main.mutatorEnabled[15]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fVoid Rifts");
+	}
+	if(main.mutatorEnabled[16]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fPower Overwhelming");
+	}
+	if(main.mutatorEnabled[17]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fTransmutation");
+	}
+	if(main.mutatorEnabled[18]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fSharing is Caring");
+	}
+	if(main.mutatorEnabled[19]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fDiffusion");
+	}
+	if(main.mutatorEnabled[20]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fBlack Death");
+	}
+	if(main.mutatorEnabled[21]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fAvenger");
+	}
+	if(main.mutatorEnabled[22]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fEvasive Maneuvers");
+	}
+	if(main.mutatorEnabled[23]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fFatal Attraction");
+	}
+	if(main.mutatorEnabled[24]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fPropagators");
+	}
+	if(main.mutatorEnabled[25]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fScorched Earth");
+	}
+	if(main.mutatorEnabled[26]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fPhoton Overload");
+	}
+	if(main.mutatorEnabled[27]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fTrick or Treat");
+	}
+	if(main.mutatorEnabled[28]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fUrsadon Shoot");
+	}
+	if(main.mutatorEnabled[29]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fGift Exchange");
+	}
+	if(main.mutatorEnabled[30]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fLucky Envelopes");
+	}
+	if(main.mutatorEnabled[31]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fAfraid of the Dark");
+	}
+	if(main.mutatorEnabled[32]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fSpeed Freaks");
+	}
+	if(main.mutatorEnabled[33]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fBoom Bots");
+	}
+	if(main.mutatorEnabled[34]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fAggressive Deployment");
+	}
+	if(main.mutatorEnabled[35]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fAlien Incubation");
+	}
+	if(main.mutatorEnabled[36]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fShortsighted");
+	}
+	if(main.mutatorEnabled[37]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fConcussive Attacks");
+	}
+	if(main.mutatorEnabled[38]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMinesweeper");
+	}
+	if(main.mutatorEnabled[39]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fLife Leech");
+	}
+	if(main.mutatorEnabled[40]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fMissile Command");
+	}
+	if(main.mutatorEnabled[41]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fVertigo");
+	}
+	if(main.mutatorEnabled[42]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fVoid Reanimators");
+	}
+	if(main.mutatorEnabled[43]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fHeroes From the Storm");
+	}
+	if(main.mutatorEnabled[44]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fEminent Domain");
+	}
+	if(main.mutatorEnabled[45]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fOrbital Strike");
+	}
+	if(main.mutatorEnabled[46]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fNaughty List");
+	}
+	if(main.mutatorEnabled[47]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fKill Bots");
+	}
+	if(main.mutatorEnabled[48]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fLava Burst");
+	}
+	if(main.mutatorEnabled[49]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fTime Rift");
+	}
+	if(main.mutatorEnabled[50]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fBarrier");
+	}
+	if(main.mutatorEnabled[51]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fTwister");
+	}
+	if(main.mutatorEnabled[52]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fRapid Fire");
+	}
+	if(main.mutatorEnabled[53]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fOutbreak");
+	}
+	if(main.mutatorEnabled[54]) {
+		simple_welcome_add_bar();
+		objective_buffer.append("\x0fWalking Infested");
+	}
+}
+
+function simple_mission_objectives() {
+	const v = getcurpl();
+	simple_welcome_bar = 0;
+	simple_bar_lb = 2147483647;
+	simple_objective_buffer_generate();
+	foreach(player : EUDLoopPlayer()) {
+		setcurpl(player);
+		SetMissionObjectives(objective_buffer.StringIndex);
+	}
+	setcurpl(P8);
+	SetMissionObjectives(objective_buffer.StringIndex);
+	for(var obplayer = 128; obplayer < 132; obplayer++) {
+		setcurpl(obplayer);
+		SetMissionObjectives(objective_buffer.StringIndex);
+	}
+	setcurpl(v);
+}
+
+function simple_welcome() {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	simple_welcome_bar = 0;
+	simple_bar_lb = 4;
+	simple_objective_buffer_generate();
+	
+	welcome_buffer.insertf(0, "\n\n\x1bCustom Mutation\n");
+	welcome_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+	welcome_buffer.appendf("{:t}", objective_buffer.epd);
+	welcome_buffer.append("\n\n\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	welcome_buffer.append("\x04Check \x19Mission Objectives \x11[F10 + J] \x04for mutation info.");
+	
+	foreach(player : EUDLoopPlayer()) {
+		setcurpl(player);
+		DisplayText(welcome_buffer.StringIndex, 4);
+	}
+	setcurpl(P8);
+	DisplayText(welcome_buffer.StringIndex, 4);
+	for(var obplayer = 128; obplayer < 132; obplayer++) {
+		setcurpl(obplayer);
+		DisplayText(welcome_buffer.StringIndex, 4);
+	}
+	setcurpl(v);
+}
+
+// reuse the buffer since two cannot be used at same time
+const victory_message_buffer = welcome_buffer;
+function victory_message_base() {
+	if(main.is_custom_mutation) {
+		victory_message_buffer.insertf(0, "\n\n\x1bCustom Mutation\n");
+	}
+	else if(main.is_random_mode) {
+		if(main.hard_mode) {
+			victory_message_buffer.insertf(0, "\n\n\x1bRandom Mutation (Hard)\n");
+		}
+		else {
+			victory_message_buffer.insertf(0, "\n\n\x1bRandom Mutation\n");
+		}
+	}
+	else if(main.hard_mode) {
+		victory_message_buffer.insertf(0, "\n\n\x1bDaily Mutation (Hard) \x1c#{}\n", daily_seed.day_count);
+	}
+	else {
+		victory_message_buffer.insertf(0, "\n\n\x1bDaily Mutation \x1c#{}\n", daily_seed.day_count);
+	}
+}
+function victory_force1() {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	victory_message_base();
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	victory_message_buffer.append("\x19Victory!!!\n");
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	foreach(player : EUDLoopPlayer(force=Force1)) {
+		setcurpl(player);
+		DisplayText(victory_message_buffer.StringIndex, 4);
+	}
+
+	victory_message_base();
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	victory_message_buffer.append("\x08Defeat!!!\n");
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	foreach(player : EUDLoopPlayer(force=Force2)) {
+		setcurpl(player);
+		DisplayText(victory_message_buffer.StringIndex, 4);
+	}
+	setcurpl(v);
+}
+
+function victory_force2() {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	victory_message_base();
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	victory_message_buffer.append("\x19Victory!!!\n");
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	foreach(player : EUDLoopPlayer(force=Force2)) {
+		setcurpl(player);
+		DisplayText(victory_message_buffer.StringIndex, 4);
+	}
+
+	victory_message_base();
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	victory_message_buffer.append("\x08Defeat!!!\n");
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	foreach(player : EUDLoopPlayer(force=Force1)) {
+		setcurpl(player);
+		DisplayText(victory_message_buffer.StringIndex, 4);
+	}
+	setcurpl(v);
+}
+
+function defeat() {
+	const v = getcurpl();
+	setcurpl(getuserplayerid());
+	victory_message_base();
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	victory_message_buffer.append("\x08Defeat!!!\n");
+	victory_message_buffer.append("\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	foreach(player : EUDLoopPlayer()) {
+		setcurpl(player);
+		DisplayText(victory_message_buffer.StringIndex, 4);
+	}
+	setcurpl(v);
+}
+
+function reveal_comps() {
+	printAll("\x0e◇ \x19All AI units revealed");
+	PlayWAVAll("sound/terran/bldg/tcssca00.wav");
+}

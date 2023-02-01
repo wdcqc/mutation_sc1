@@ -1,0 +1,30 @@
+import PluginVariables as msqcvar;
+import utils;
+
+var transmutation_kill_count = 3;
+const transmutation_unit_target = [20, 100, 19, 17, 0, 0, 0, 0, 21, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 54, 53, 48, 37, 0, 57, 55, 56, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 75, 0, 0, 0, 77, 78, 79, 76, 0, 80, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		transmutation_kill_count = 2;
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && cm.killCount >= transmutation_kill_count) {
+		const target_ut = transmutation_unit_target[cm.unitType];
+		const hp_prop = cm.hp * 100 / dwread_epd(EPD(0x662350) + cm.unitType);
+		if(target_ut > 0) {
+			setloc_epd($L("shared"), epd + 40 / 4);
+			DoActions(
+				RemoveUnitAt(All, cm.unitType, "shared", player),
+				CreateUnit(1, target_ut, "shared", player),
+				ModifyUnitHitPoints(All, target_ut, player, "shared", hp_prop),
+				ModifyUnitShields(All, target_ut, player, "shared", 50)
+			);
+			utils.decide_target_if_comp("target", player);
+			utils.order_computer(target_ut, player, "shared", Patrol, "target");
+		}
+	}
+}

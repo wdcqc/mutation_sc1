@@ -1,0 +1,38 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const polarity_choice = [1,0,1,1,0,1,0,1,1,1,1,1,1,0,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1,0,1,0,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,0,1,0,1,1,1,1,0,1,0,0,0,0,0,1,1,1,0,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const polarity = EUDArray(228);
+
+function init() {
+	for(var i=0; i<228; i++) {
+		if(polarity_choice[i] == 1) {
+			polarity[i] = rand() % 4; // assign polarity to random player
+		}
+		else {
+			polarity[i] = 255;
+		}
+	}
+}
+
+const polarity_to_df  = [9, 13, 16, 17];
+function loopdeath_comp(player, ut, x, y, epd) {
+	if(ut < 106) {
+		const cm = EPDCUnitMap(epd);
+		const pol = polarity[ut];
+		const lap = cm.lastAttackingPlayer;
+		if(pol < 4 && lap < 4 && lap == pol) {
+			setloc($L("shared"), x, y);
+			dilateloc($L("shared"), 16, 16);
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+			CreateUnit(1, ut, "shared", player);
+			utils.scan_image(975, "shared", polarity_to_df[pol], 9);
+			MoveLocation("target", "(buildings)", lap, "Anywhere");
+			Order(ut, player, "shared", Patrol, "target");
+			if(Deaths(player, AtLeast, 1, ut)) {
+				SetDeaths(player, Subtract, 1, ut);
+			}
+		}
+	}
+}
+

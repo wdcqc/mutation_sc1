@@ -1,0 +1,161 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+	// create candy bowl
+	CreateUnit(1, 196, "candybowl_force1", P7);
+	GiveUnits(All, 196, P7, "candybowl_force1", P10);
+	CreateUnit(1, 196, "candybowl_force2", P7);
+	GiveUnits(All, 196, P7, "candybowl_force2", P10);
+	
+	DoActions(
+		// khalis
+		SetMemoryX(6701700, SetTo, 0, 8390656),
+		SetMemory(6691792, SetTo, 65537),
+		SetMemory(6691796, SetTo, 65537),
+		SetMemory(6695524, SetTo, 327685),
+		SetMemoryX(6693608, SetTo, 5888, 65280),
+		SetMemoryX(6696736, SetTo, 5888, 65280),
+		SetMemoryX(6703384, SetTo, 5888, 65280),
+		
+		// civ armor class & size
+		SetMemoryX(6693260, SetTo, 0, -16777216),
+		SetMemory(6690880, SetTo, 131074),
+		SetMemory(6690884, SetTo, 131074),
+		SetMemory(6695068, SetTo, 327685)
+	);
+	
+	CreateUnit(4, 129, "candybowl_force1", P7);
+	GiveUnits(All, 129, P7, "candybowl_force1", P10);
+	CreateUnit(4, 129, "candybowl_force2", P7);
+	GiveUnits(All, 129, P7, "candybowl_force2", P10);
+}
+
+function spawnTrickUnit(loc : TrgLocation) {
+	switch(rand() % 8) {
+		case 0:
+		CreateUnit(1, 3, loc, P7);
+		break;
+		case 1:
+		CreateUnit(1, 5, loc, P7);
+		break;
+		case 2:
+		CreateUnit(1, 66, loc, P7);
+		break;
+		case 3:
+		CreateUnit(1, 50, loc, P7);
+		break;
+		case 4:
+		CreateUnit(1, 43, loc, P7);
+		break;
+		case 5:
+		CreateUnit(1, 20, loc, P7);
+		break;
+		case 6:
+		CreateUnit(1, 65, loc, P7);
+		break;
+		case 7:
+		CreateUnitWithProperties(1, 67, loc, P7, UnitProperty(energy=100));
+		break;
+	}
+	const v = getcurpl();
+	setcurpl(P7);
+	RunAIScriptAt("JYDg", loc);
+	setcurpl(v);
+	once(loc == $L("candybowl_force1")) {
+		messages.announce_halloween(P1);
+		messages.announce_halloween(P2);
+		messages.announce_halloween(P3);
+	}
+	once(loc == $L("candybowl_force2")) {
+		messages.announce_halloween(P4);
+		messages.announce_halloween(P5);
+		messages.announce_halloween(P6);
+	}
+}
+
+var nextCivSpawn = 120;
+function loop8_normal() {
+	foreach(player : EUDLoopPlayer(force=Force1)) {
+		if(Bring(player, AtLeast, 1, "(men)", "candybowl_force1") && Bring(P10, AtMost, 29, 129, "candybowl_force1") && Accumulate(player, AtLeast, 50, Ore)) {
+			MoveUnit(All, "(men)", player, "candybowl_force1", "candybowl_out_force1");
+			CreateUnit(1, 129, "candybowl_force1", P7);
+			GiveUnits(All, 129, P7, "Anywhere", P10);
+			SetResources(player, Subtract, 50, Ore);
+		}
+	}
+	foreach(player : EUDLoopPlayer(force=Force2)) {
+		if(Bring(player, AtLeast, 1, "(men)", "candybowl_force2") && Bring(P10, AtMost, 29, 129, "candybowl_force2") && Accumulate(player, AtLeast, 50, Ore)) {
+			MoveUnit(All, "(men)", player, "candybowl_force2", "candybowl_out_force2");
+			CreateUnit(1, 129, "candybowl_force2", P7);
+			GiveUnits(All, 129, P7, "Anywhere", P10);
+			SetResources(player, Subtract, 50, Ore);
+		}
+	}
+	
+	once(ElapsedTime(AtLeast, 5)) {
+		CreateUnit(1, 101, "candybowl_force1", Force1);
+		CreateUnit(1, 101, "candybowl_force2", Force2);
+	}
+	
+	if(Bring(P9, AtLeast, 1, 15, "candybowl_force1")) {
+		if(Bring(P10, AtLeast, 1, 129, "candybowl_force1")) {
+			GiveUnits(1, 15, P9, "candybowl_force1", P11);
+			RemoveUnitAt(1, 129, "candybowl_force1", P10);
+		}
+		else {
+			RemoveUnitAt(1, 15, "candybowl_force1", P9);
+			spawnTrickUnit("candybowl_force1");
+		}
+		if(ElapsedTime(AtMost, 600)) {
+			foreach(player : EUDLoopPlayer(force=Force1)) {
+				MinimapPing("candybowl_force1");
+			}
+		}
+	}
+	
+	if(Bring(P11, AtLeast, 1, 15, "candybowl_force2")) {
+		if(Bring(P10, AtLeast, 1, 129, "candybowl_force2")) {
+			GiveUnits(1, 15, P11, "candybowl_force2", P9);
+			RemoveUnitAt(1, 129, "candybowl_force2", P10);
+		}
+		else {
+			RemoveUnitAt(1, 15, "candybowl_force2", P11);
+			spawnTrickUnit("candybowl_force2");
+		}
+		if(ElapsedTime(AtMost, 600)) {
+			foreach(player : EUDLoopPlayer(force=Force2)) {
+				MinimapPing("candybowl_force2");
+			}
+		}
+	}
+	
+	if(ElapsedTime(AtLeast, nextCivSpawn)) {
+		const x, y = utils.get_neutral_loc();
+		setloc("shared", x, y);
+		const result = utils.safe_spawn(1, 15, P7, "shared", "buffer");
+		if(result) {
+			if(rand() < 32768) {
+				GiveUnits(All, 15, P7, "Anywhere", P9);
+			}
+			else {
+				GiveUnits(All, 15, P7, "Anywhere", P11);
+			}
+			if(ElapsedTime(AtMost, 1100)) {
+				nextCivSpawn += 20;
+			}
+			else if(ElapsedTime(AtMost, 1700)) {
+				nextCivSpawn += 16;
+			}
+			else if(ElapsedTime(AtMost, 2300)) {
+				nextCivSpawn += 12;
+			}
+			else {
+				nextCivSpawn += 8;
+			}
+		}
+	}
+	Order(15, P9, "Anywhere", Move, "candybowl_force1");
+	Order(15, P11, "Anywhere", Move, "candybowl_force2");
+}

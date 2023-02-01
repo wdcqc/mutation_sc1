@@ -1,0 +1,77 @@
+import PluginVariables as msqcvar;
+import utils;
+import main;
+
+const death_summons = utils.death_summons;
+
+function init() {
+	if(main.mutatorEnabled[19]) { // diffusion
+		SetMemoryX(0x00656f1c, SetTo, 50, 65535);
+	}
+	else {
+		SetMemoryX(0x00656f1c, SetTo, 100, 65535);
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(ut != 47 && ut != 50 && death_summons[ut] > 0) {
+		const cm = EPDCUnitMap(epd);
+		const summon_type = (death_summons[ut] % 2 == 0) ? 50 : 47;
+		const summon_count = death_summons[ut] / 2;
+		setloc("shared", x, y);
+		setloc("closerange", x, y);
+		dilateloc("closerange", 96, 96);
+		SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+		if(ElapsedTime(AtMost, 1200)) {
+			CreateUnitWithProperties(summon_count, summon_type, "buffer", player, UnitProperty(hitpoint=25));
+		}
+		else if(ElapsedTime(AtMost, 1800)) {
+			CreateUnitWithProperties(summon_count, summon_type, "buffer", player, UnitProperty(hitpoint=50));
+		}
+		else if(ElapsedTime(AtMost, 2400)) {
+			CreateUnitWithProperties(summon_count, summon_type, "buffer", player, UnitProperty(hitpoint=75));
+		}
+		else {
+			CreateUnitWithProperties(summon_count, summon_type, "buffer", player, UnitProperty(hitpoint=100));
+		}
+		MoveUnit(All, summon_type, player, "buffer", "shared");
+		RemoveUnitAt(All, summon_type, "buffer", player);
+		utils.decide_target_if_comp("target", player);
+		utils.order_computer(summon_type, player, "closerange", Patrol, "target");
+	}
+}
+
+function loop32_normal() {
+	once(ElapsedTime(AtLeast, 1000)) {
+		if(main.mutatorEnabled[19]) { // diffusion
+			SetMemoryX(0x00656f1c, Add, 50, 65535);
+		}
+		else {
+			SetMemoryX(0x00656f1c, Add, 100, 65535);
+		}
+	}
+	once(ElapsedTime(AtLeast, 1400)) {
+		if(main.mutatorEnabled[19]) { // diffusion
+			SetMemoryX(0x00656f1c, Add, 50, 65535);
+		}
+		else {
+			SetMemoryX(0x00656f1c, Add, 100, 65535);
+		}
+	}
+	once(ElapsedTime(AtLeast, 1800)) {
+		if(main.mutatorEnabled[19]) { // diffusion
+			SetMemoryX(0x00656f1c, Add, 50, 65535);
+		}
+		else {
+			SetMemoryX(0x00656f1c, Add, 100, 65535);
+		}
+	}
+	once(ElapsedTime(AtLeast, 2200)) {
+		if(main.mutatorEnabled[19]) { // diffusion
+			SetMemoryX(0x00656f1c, Add, 50, 65535);
+		}
+		else {
+			SetMemoryX(0x00656f1c, Add, 100, 65535);
+		}
+	}
+}

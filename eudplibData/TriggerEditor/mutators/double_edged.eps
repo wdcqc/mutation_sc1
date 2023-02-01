@@ -1,0 +1,109 @@
+import PluginVariables as msqcvar;
+import constants;
+
+function init() {
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.hp < 128) {
+		return;
+	}
+	if(cm.unitType == 5 || cm.unitType == 3 || cm.unitType == 30) {
+		const subunit, subunit_epd = cunitepdread_epd(epd + 112 / 4);
+		if(subunit > 0) {
+			const subunit_cm = EPDCUnitMap(subunit_epd);
+			if(subunit_cm.groundWeaponCooldown == 0 && subunit_cm.airWeaponCooldown == 0) {
+				const maxHP = dwread_epd(EPD(0x662350) + cm.unitType);
+				// restore hp
+				cm.hp += 128;
+				if(cm.hp > maxHP) {
+					cm.hp = maxHP;
+				}
+			}
+			else {
+				if(cm.hp >= 896) {
+					cm.hp -= 640;
+				}
+				else {
+					cm.hp = 256;
+				}
+			}
+		}
+	}
+	else if(cm.unitType == 72 || cm.unitType == 83) {
+		if(MemoryXEPD(epd + 201 / 4, Exactly, 0, 0x0000FF00)) {
+			const maxHP = dwread_epd(EPD(0x662350) + cm.unitType);
+			const maxSP = constants.shields[cm.unitType];
+			// restore hp
+			cm.hp += 128;
+			if(cm.hp > maxHP) {
+				const remaining_hp = cm.hp - maxHP;
+				cm.hp = maxHP;
+				cm.shield += remaining_hp;
+				if(cm.shield > maxSP) {
+					cm.shield = maxSP;
+				}
+			}
+		}
+		else {
+			if(cm.shield >= 640) {
+				cm.shield -= 640;
+			}
+			else {
+				const remaining_hp = 640 - cm.shield;
+				cm.shield = 0;
+				if(cm.hp >= remaining_hp + 256) {
+					cm.hp -= remaining_hp;
+				}
+				else {
+					cm.hp = 256;
+				}
+			}
+		}
+	}
+	else if(cm.unitType < 106) {
+		const ut = cm.unitType;
+		if(cm.groundWeaponCooldown == 0 && cm.airWeaponCooldown == 0 && cm.spellCooldown == 0) {
+			const maxHP = dwread_epd(EPD(0x662350) + ut);
+			// restore hp
+			cm.hp += 128;
+			if(cm.hp > maxHP) {
+				const remaining_hp = cm.hp - maxHP;
+				cm.hp = maxHP;
+				if(constants.has_shield[ut]) {
+					const maxSP = constants.shields[ut];
+					cm.shield += remaining_hp;
+					if(cm.shield > maxSP) {
+						cm.shield = maxSP;
+					}
+				}
+			}
+		}
+		else {
+			if(constants.has_shield[ut]) {
+				if(cm.shield >= 640) {
+					cm.shield -= 640;
+				}
+				else {
+					const remaining_hp = 640 - cm.shield;
+					cm.shield = 0;
+					if(cm.hp >= remaining_hp + 256) {
+						cm.hp -= remaining_hp;
+					}
+					else {
+						cm.hp = 256;
+					}
+				}
+			}
+			else {
+				if(cm.hp >= 896) {
+					cm.hp -= 640;
+				}
+				else {
+					cm.hp = 256;
+				}
+			}
+		}
+	}
+}

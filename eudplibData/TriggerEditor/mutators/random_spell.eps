@@ -1,0 +1,62 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const availUnits = [0,1,2,4,6,7,8,12,31,32,38,41,43,44,58,60,62,64,66,68,70,73,103];
+const spellProbs = [9410,9410,24833,24833,24833,9410,24833,115614,24833,9410,9410,9410,24833,24833,43809,24833,24833,9410,24833,65536,43809,9410,24833];
+const gndWeapons = [0,2,4,7,11,13,16,19,27,25,38,43,48,46,130,130,130,62,66,70,73,79,109];
+const airWeapons = [0,2,130,8,130,130,15,20,130,130,38,130,48,130,103,100,104,130,66,70,74,79,130];
+const allSpells = [30, 32, 33, 34, 56, 57, 58, 60, 83, 84, 107, 108];
+
+var currentSpellPtr1 = 0;
+var currentUnit1 = 0;
+var currentSpellPtr2 = 12;
+var currentUnit2 = 43;
+
+function init() {
+	for(var i = 0; i < 106; i++) {
+		SetMemoryXEPD(EPD(6701184) + i, SetTo, 2097152, 2097152);
+	}
+	if(Switch("game_hard", Set)) {
+		for(var i = 0; i < 23; i++) {
+			spellProbs[i] *= 2;
+		}
+	}
+}
+
+function loop1_normal() {
+	bwrite(0x6636B8 + currentUnit1, gndWeapons[currentSpellPtr1]);
+	bwrite(0x6616E0 + currentUnit1, airWeapons[currentSpellPtr1]);
+	currentSpellPtr1++;
+	if(currentSpellPtr1 >= 23) {
+		currentSpellPtr1 = 0;
+	}
+	currentUnit1 = availUnits[currentSpellPtr1];
+	const frame_rand1 = rand();
+	if(frame_rand1 < spellProbs[currentSpellPtr1]) {
+		const randSpell1 = allSpells[frame_rand1 % 12];
+		if(gndWeapons[currentSpellPtr1] < 130) {
+			bwrite(0x6636B8 + currentUnit1, randSpell1);
+		}
+		if(airWeapons[currentSpellPtr1] < 130) {
+			bwrite(0x6616E0 + currentUnit1, randSpell1);
+		}
+	}
+	
+	bwrite(0x6636B8 + currentUnit2, gndWeapons[currentSpellPtr2]);
+	bwrite(0x6616E0 + currentUnit2, airWeapons[currentSpellPtr2]);
+	currentSpellPtr2++;
+	if(currentSpellPtr2 >= 23) {
+		currentSpellPtr2 = 0;
+	}
+	currentUnit2 = availUnits[currentSpellPtr2];
+	const frame_rand2 = rand();
+	if(frame_rand2 < spellProbs[currentSpellPtr2]) {
+		const randSpell2 = allSpells[frame_rand2 % 12];
+		if(gndWeapons[currentSpellPtr2] < 130) {
+			bwrite(0x6636B8 + currentUnit2, randSpell2);
+		}
+		if(airWeapons[currentSpellPtr2] < 130) {
+			bwrite(0x6616E0 + currentUnit2, randSpell2);
+		}
+	}
+}

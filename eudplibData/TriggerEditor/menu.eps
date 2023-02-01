@@ -1,0 +1,325 @@
+import PluginVariables as msqcvar;
+import messages;
+import main;
+import ai.ai_main;
+import ob_controls;
+
+// enable or disable custom mode
+const custom_mode_enabled = true;
+
+// epd of preplaced selector, need to check scmd index (any ghost works)
+var selector_epd = 0;
+var selector_player = 0;
+
+// all the variables
+const choice_ptrs = EUDArray(70);
+const choice_epds = EUDArray(70);
+var choice_count = 54;
+const box_x_array = [ 40, 136, 240, 336, 416, 520];
+const box_y_array = [120, 136, 152, 168, 184, 200, 216, 232, 248];
+const gas_flingy_array = [136, 136, 138, 138, 134, 134];
+
+// alphabetical order (swapped a little bit to fit in the box)
+const permutation = [31, 34, 35, 21, 50, 20, 33, 37, 19, 12, 44, 22, 23, 7, 29, 8, 43, 6, 47, 4, 48, 39, 30, 3, 11, 38, 40, 14, 13, 46, 45, 53, 26, 1, 16, 24, 5, 9, 25, 52, 18, 36, 2, 32, 49, 17, 27, 51, 28, 42, 41, 15, 54, 10];
+
+// color code
+const mutate_cc = EUDArray(70);
+const green = $T("\x07");
+const teal = $T("\x0f");
+const red = $T("\x08");
+const brown = $T("\x15");
+
+var current_info = 0;
+var current_info_timer = 0;
+
+var custom_menu_stage = 0;
+
+var menu_loop_var = 0;
+
+function spawn_selector() {
+    const ox, oy = getlocTL("ModeSelect");
+    setloc("spawn", ox + 320, oy + 240);
+	if(Switch("game_compobs", Set)) {
+		if(MemoryX(0x0057efe4, Exactly, 2, 255)) {
+			selector_player = 7;
+		}
+		else {
+			selector_player = 6;
+		}
+	}
+	else {
+		foreach(player : EUDLoopPlayer()) {
+			selector_player = player;
+			break;
+		}
+	}
+	const ptr, epd = cunitepdread_epd(EPD(0x628438));
+	CreateUnitWithProperties(1, 16, "spawn", selector_player, UnitProperty(invincible=True));
+	selector_epd = epd;
+
+	if(MemoryXEPD(EPD(0x0057eee8) + 9 * selector_player, Exactly, 1, 255)) {
+		Order(16, selector_player, "ModeSelect", Move, "random_mode");
+	}
+}
+
+function menu_generate_choices() {
+    const ox, oy = getlocTL("ModeSelect");
+	var i = 0;
+	for(var yi = 0; yi < 9; yi++) {
+		for(var xi = 0; xi < 6; xi++) {
+			choice_ptrs[i], choice_epds[i] = cunitepdread_epd(EPD(0x628438));
+			setloc("shared", ox + box_x_array[xi], oy + box_y_array[yi]);
+			CreateUnit(1, 223, "shared", P7);
+			GiveUnits(All, 223, P7, "Anywhere", P10);
+			i++;
+		}
+	}
+	choice_count = i;
+}
+
+function menu_init() {
+	DoActions(
+		SetMemory(6702076, SetTo, 1107296256),
+		SetMemoryX(6686412, SetTo, 0, -16777216),
+		SetMemoryX(6690516, SetTo, 131072, 131072),
+		SetMemory(6692544, SetTo, 524296),
+		SetMemory(6692548, SetTo, 458759),
+		SetMemory(6695900, SetTo, 1048592),
+		SetMemoryX(6688700, SetTo, 1638400000, -65536),
+		
+		// kerrigan (ghost) sight range & attack range
+		SetMemory(6648956, SetTo, 32),
+		SetMemoryX(6697544, SetTo, 1, 255),
+		SetMemory(6649072, SetTo, 32)
+	);
+	menu_generate_choices();
+}
+
+function menu_message() {
+	const green_epd = EPD(GetMapStringAddr(green));
+	const teal_epd = EPD(GetMapStringAddr(teal));
+	for(var i = 0; i < 70; i++) {
+		if(main.mutatorEnabled[i]) {
+			mutate_cc[i] = green_epd;
+		}
+		else {
+			mutate_cc[i] = teal_epd;
+		}
+	}
+	// we use printAllAt so players can have 3 spare lines for chat
+	if(Switch("game_compobs", Set) && MemoryX(0x006d10b0, Exactly, 0, 65280) && getuserplayerid() >= 128) { // ob mode
+		printAllAt(0, "\x13\x1bSandbox \x0e◇ \x02Hover \x1dfor info / \x02Click\x1f to select mutator / \x02C\x1f to confirm");
+	}
+	else {
+		printAllAt(0, "\x13\x1bSandbox \x0e◇ \x03L\x1fockdown for info / \x03A\x1fttack to select mutator / \x03C\x1floak to confirm");
+	}
+	if(current_info > 0) {
+		const v = getcurpl();
+		setcurpl(getuserplayerid());
+		messages.welcome_buffer.insert(0, "");
+		messages.append_mutator_info(current_info);
+		setcurpl(v);
+		printAllAt(1, "\x13\x1C━━━━ \x0e◇ \x0f{:t} \x0e◇ \x1C━━━", messages.welcome_buffer.epd);
+	}
+	else {
+		printAllAt(1, "\x13\x1C━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+	}
+    printAllAt(2, "\x13   {:t}Afraid of the Dark \x0e| {:t}Aggro Deployment \x0e| {:t}Alien Incubation  \x0e| {:t}Avenger          \x0e| {:t}Barrier                     \x0e| {:t}Black Death              ", mutate_cc[31], mutate_cc[34], mutate_cc[35], mutate_cc[21], mutate_cc[50], mutate_cc[20]);
+	printAllAt(3, "\x13   {:t}Boom Bots            \x0e| {:t}Concussive Attacks \x0e| {:t}Diffusion             \x0e| {:t}Double Edged \x0e| {:t}Eminent Domain     \x0e| {:t}Evasion                     ", mutate_cc[33], mutate_cc[37], mutate_cc[19], mutate_cc[12], mutate_cc[44], mutate_cc[22]);
+	printAllAt(4, "\x13   {:t}Fatal Attraction    \x0e| {:t}Fear                        \x0e| {:t}Gift Exchange      \x0e| {:t}Going Nuclear \x0e| {:t}Heroes of Storm     \x0e| {:t}Just Die                    ", mutate_cc[23], mutate_cc[7], mutate_cc[29], mutate_cc[8], mutate_cc[43], mutate_cc[6]);
+	printAllAt(5, "\x13   {:t}Kill Bots                \x0e| {:t}Laser Drill               \x0e| {:t}Lava Burst            \x0e| {:t}Life Leech        \x0e| {:t}Lucky Envelopes     \x0e| {:t}Micro Transactions  ", mutate_cc[47], mutate_cc[4], mutate_cc[48], mutate_cc[39], mutate_cc[30], mutate_cc[3]);
+	printAllAt(6, "\x13    {:t}Mineral Shields    \x0e| {:t}Minesweeper          \x0e| {:t}Missile Command \x0e| {:t}M.A.D.             \x0e| {:t}Moment of Silence \x0e| {:t}Naughty List             ", mutate_cc[11], mutate_cc[38], mutate_cc[40], mutate_cc[14], mutate_cc[13], mutate_cc[46]);
+	printAllAt(7, "\x13    {:t}Orbital Strike        \x0e| {:t}Outbreak                \x0e| {:t}Photon Overload  \x0e| {:t}Polarity           \x0e| {:t}Power Overwhelm  \x0e| {:t}Propagators             ", mutate_cc[45], mutate_cc[53], mutate_cc[26], mutate_cc[1], mutate_cc[16], mutate_cc[24]);
+	printAllAt(8, "\x13    {:t}Purifier Beam      \x0e| {:t}Self Destruction      \x0e| {:t}Scorched Earth    \x0e| {:t}Rapid Fire        \x0e| {:t}Sharing is Caring    \x0e| {:t}Shortsighted            ", mutate_cc[5], mutate_cc[9], mutate_cc[25], mutate_cc[52], mutate_cc[18], mutate_cc[36]);
+	printAllAt(9, "\x13   {:t}Slim Pickings        \x0e| {:t}Speed Freaks         \x0e| {:t}Time Rift              \x0e| {:t}Transmutation \x0e| {:t}Trick or Treat          \x0e| {:t}Twister                     ", mutate_cc[2], mutate_cc[32], mutate_cc[49], mutate_cc[17], mutate_cc[27], mutate_cc[51]);
+	printAllAt(10, "\x13   {:t}Ursadon Shoot     \x0e| {:t}Void Reanimators   \x0e| {:t}Vertigo                 \x0e| {:t}Void Rifts        \x0e| {:t}Walking Infested     \x0e| {:t}We Move Unseen     ", mutate_cc[28], mutate_cc[42], mutate_cc[41], mutate_cc[15], mutate_cc[54], mutate_cc[10]);
+}
+
+function reset_menu_loop() {
+	menu_loop_var = 3;
+}
+
+function set_info(k) {
+	current_info = permutation[k];
+	current_info_timer = 10;
+}
+
+function toggle_choice(i) {
+	const target_mutator_id = permutation[i];
+	if(target_mutator_id == 1) {
+		eprintAll("\x0e◇ \x0fPolarity \x08is disabled in this map. \x0e◇");
+		PlayWAVAll("sound/bullet/ptrfir01.wav");
+	}
+	else if(main.total_mutators_enabled < 12 || main.mutatorEnabled[target_mutator_id] > 0) {
+		main.toggle_mutator(target_mutator_id);
+		PlayWAVAll("sound/bullet/tscfir00.wav");
+	}
+	else {
+		eprintAll("\x0e◇ \x08At most 12 mutators can be selected \x0e◇");
+		PlayWAVAll("sound/bullet/ptrfir01.wav");
+	}
+}
+
+function menu_stage0() {
+	once {
+		if(Memory(0x57F0B4, AtLeast, 1)) {
+			SetCountdownTimer(SetTo, 10);
+		}
+		DisplayTextAll(
+			"\x13\x1bMutation Melee \x0e◇ \x11Choose Game Mode\n\n\x13\x19↑ Daily \x0e◇ \x1dMutator changes every day.\n\x13\x19← Random \x0e◇ \x1dMutator is randomly chosen.\n\x13\x19→ Sandbox \x0e◇ \x1dHost chooses the mutators.\n\n\x13\x0e◇ \x03C\x0floak to enable Hard Mode (2→3 mutators).\n "
+		);
+	}
+	
+	if(Bring(selector_player, AtLeast, 1, 16, "daily_mode")) {
+		if(MemoryXEPD(selector_epd + 166 / 4, Exactly, 109 * 65536, 0x00FF0000)) {
+			SetSwitch("game_hard", Set);
+		}
+		SetCountdownTimer(SetTo, 0);
+		KillUnitAt(All, 16, "daily_mode", selector_player);
+		SetSwitch("game_start", Set);
+		RemoveUnitAt(All, "(any unit)", "ModeSelect", P10);
+	}
+	
+	if(Bring(selector_player, AtLeast, 1, 16, "random_mode")) {
+		if(MemoryXEPD(selector_epd + 166 / 4, Exactly, 109 * 65536, 0x00FF0000)) {
+			SetSwitch("game_hard", Set);
+		}
+		SetCountdownTimer(SetTo, 0);
+		KillUnitAt(All, 16, "random_mode", selector_player);
+		SetSwitch("game_start", Set);
+		SetSwitch("game_random", Set);
+		RemoveUnitAt(All, "(any unit)", "ModeSelect", P10);
+	}
+
+	if(Bring(selector_player, AtLeast, 1, 16, "custom_mode")) {
+		if(MemoryXEPD(selector_epd + 166 / 4, Exactly, 109 * 65536, 0x00FF0000)) {
+			SetSwitch("game_hard", Set);
+		}
+    	const ox, oy = getlocTL("ModeSelect");
+		SetCountdownTimer(SetTo, 0);
+		ModifyUnitEnergy(All, 16, selector_player, "Anywhere", 0);
+		RemoveUnitAt(All, 197, "ModeSelect", P10);
+		RemoveUnitAt(All, 198, "ModeSelect", P10);
+		RemoveUnitAt(All, 199, "ModeSelect", P10);
+		setloc("shared", ox + 320, oy + 48);
+		MoveUnit(All, 16, selector_player, "ModeSelect", "shared");
+		setloc("shared", ox + 288, oy + 48);
+		CreateUnit(1, 215, "shared", P7);
+		setloc("shared", ox + 354, oy + 48);
+		CreateUnit(1, 215, "shared", P7);
+		setloc("shared", ox + 288, oy + 80);
+		CreateUnit(1, 215, "shared", P7);
+		setloc("shared", ox + 354, oy + 80);
+		CreateUnit(1, 215, "shared", P7);
+		setloc("shared", ox + 320, oy + 80);
+		CreateUnit(1, 215, "shared", P7);
+		GiveUnits(All, 215, P7, "ModeSelect", P10);
+		printAll("\n\n\n\n\n\n\n\n\n\n\n");
+		menu_init();
+		main.set_to_custom();
+		custom_menu_stage = 1;
+		reset_menu_loop();
+	}
+	
+	if(Bring(selector_player, AtLeast, 1, 16, "credits")) {
+    	const ox, oy = getlocTL("ModeSelect");
+		setloc("shared", ox + 320, oy + 240);
+		MoveUnit(All, 16, selector_player, "ModeSelect", "shared");
+		if(Switch("game_compobs", Set)) {
+			eprintAll("\x0fMutation AI Observation \x0e◇ \x19wdcqc / aieud project");
+		}
+		else {
+			eprintAll("\x0fMutation 3V3 \x0e◇ \x19wdcqc / aieud project");
+		}
+	}
+	
+	once(CountdownTimer(AtMost, 0) && Memory(0x57F0B4, AtLeast, 1)) {
+    	const ox, oy = getlocTL("ModeSelect");
+		setloc("shared", ox + 320, oy + 240);
+		if(Switch("game_compobs", Set)) {
+			Order(16, selector_player, "shared", Move, "random_mode");
+		}
+		else {
+			Order(16, selector_player, "shared", Move, "daily_mode");
+		}
+	}
+}
+
+function menu_stage1() {
+	ModifyUnitEnergy(All, 16, selector_player, "Anywhere", 100);
+	menu_loop_var++;
+	if(menu_loop_var == 4) {
+		menu_loop_var = 0;
+		menu_message();
+		Order(16, P7, "ModeSelect", Move, "random_mode");
+	}
+	
+	if(current_info_timer == 0) {
+		current_info = 0;
+	}
+	else {
+		current_info_timer -= 1;
+	}
+	
+	for(var i = 0; i < choice_count; i++) {
+		const cm = EPDCUnitMap(choice_epds[i]);
+		if(cm.lockdownTimer > 1) {
+			cm.lockdownTimer = 1;
+		}
+	}
+	
+	// L = check info
+	if(MemoryXEPD(selector_epd + 77 / 4, Exactly, 115 * 256, 0x0000FF00)) { // order_id
+		for(var i = 0; i < choice_count; i++) {
+			if(MemoryEPD(selector_epd + 92 / 4, Exactly, choice_ptrs[i])) {
+				current_info = permutation[i];
+				current_info_timer = 125;
+			}
+		}
+		SetMemoryXEPD(selector_epd + 77 / 4, SetTo, 1 * 256 + 0 * 65536, 0x00FFFF00);
+		setloc($L("shared"), 9999, 9999);
+		MoveUnit(All, 16, selector_player, "Anywhere", "shared");
+	}
+	else if(MemoryXEPD(selector_epd + 77 / 4, Exactly, 10 * 256, 0x0000FF00)) {
+		for(var i = 0; i < choice_count; i++) {
+			if(MemoryEPD(selector_epd + 92 / 4, Exactly, choice_ptrs[i])) {
+				toggle_choice(i);
+			}
+		}
+		SetMemoryXEPD(selector_epd + 77 / 4, SetTo, 1 * 256 + 0 * 65536, 0x00FFFF00);
+		setloc($L("shared"), 9999, 9999);
+		MoveUnit(All, 16, selector_player, "Anywhere", "shared");
+	}
+	else if(MemoryXEPD(selector_epd + 166 / 4, Exactly, 109 * 65536, 0x00FF0000)) {
+		ModifyUnitEnergy(All, 16, selector_player, "Anywhere", 0);
+		printAll("\n\n\n\n\n\n\n\n\n\n\n");
+		KillUnitAt(All, 223, "ModeSelect", P10);
+		KillUnitAt(All, 16, "ModeSelect", selector_player);
+		SetSwitch("game_start", Set);
+		RemoveUnitAt(All, "(any unit)", "ModeSelect", P10);
+		PlayWAVAll("sound/bullet/tscfir00.wav");
+		
+		// kerrigan ghost sight range & attack range & lock range
+		SetMemory(6648956, SetTo, 192);
+		SetMemoryX(6697544, SetTo, 11, 255);
+		SetMemory(6649072, SetTo, 256);
+	}
+}
+
+function menu() {
+	once {
+		spawn_selector();
+	}
+	if(Memory(0x57F0B4, AtLeast, 1)) {
+		CenterViewAll("ModeSelect");
+	}
+	if(Switch("game_compobs", Set) && MemoryX(0x006d10b0, Exactly, 0, 65280) && getuserplayerid() >= 128) {
+		ob_controls.menu_obs();
+	}
+	if(custom_menu_stage == 0) {
+		menu_stage0();
+	}
+	else if(custom_menu_stage == 1) {
+		menu_stage1();
+	}
+}

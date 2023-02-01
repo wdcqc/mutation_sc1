@@ -1,0 +1,29 @@
+import PluginVariables as msqcvar;
+const madScore = [0, 4096, 0, 0, 0, 0, 0, 0, 0, 0, 16384, 0, 32768, 0, 0, 0, 16384, 16384, 0, 16384, 16384, 16384, 16384, 16384, 0, 16384, 0, 0, 16384, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16384, 0, 0, 0, 0, 0, 0, 0, 0, 16384, 16384, 0, 16384, 0, 16384, 16384, 16384, 16384, 0, 0, 0, 0, 0, 0, 16384, 0, 0, 0, 0, 16384, 0, 0, 16384, 32768, 0, 0, 16384, 16384, 16384, 16384, 16384, 16384, 16384, 16384, 16384, 0, 0, 16384, 0, 16384, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16384, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+function init() {
+	SetMemoryX(6690100, SetTo, 2, 2);
+	if(Switch("game_hard", Cleared)) {
+		for(var i = 0; i < 228; i++) {
+			if(madScore[i] > 0) {
+				madScore[i] /= 2;
+			}
+		}
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(madScore[ut] > 0 && rand() < madScore[ut]) {
+		setloc($L("shared"), x, y);
+		const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+		if(spawn_ptr > 0) {
+			CreateUnit(1, 14, "shared", P7);
+
+			const nuke_cm = EPDCUnitMap(spawn_epd);
+			if(nuke_cm.unitType == 14) {
+				SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+				SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 125 * 256 + 5 * 65536 + 1 * 16777216, 0xFFFFFF00);
+			}
+		}
+	}
+}

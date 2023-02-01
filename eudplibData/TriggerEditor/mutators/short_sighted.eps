@@ -1,0 +1,97 @@
+import PluginVariables as msqcvar;
+function remove_sight_upgrades() {
+	DoActions(
+		SetMemoryX(5820572, SetTo, 0, 255),
+		SetMemoryX(5820576, SetTo, 0, 65280),
+		SetMemoryX(5820588, SetTo, 0, 16711680),
+		SetMemoryX(5820592, SetTo, 0, 65280),
+		
+		SetMemoryX(5820616, SetTo, 0, 16711680),
+		SetMemoryX(5820620, SetTo, 0, -16777216),
+		SetMemoryX(5820636, SetTo, 0, 255),
+		SetMemoryX(5820636, SetTo, 0, -16777216),
+		
+		SetMemoryX(5820664, SetTo, 0, 255),
+		SetMemoryX(5820668, SetTo, 0, 65280),
+		SetMemoryX(5820680, SetTo, 0, 16711680),
+		SetMemoryX(5820684, SetTo, 0, 65280),
+	
+		SetMemoryX(5820708, SetTo, 0, 16711680),
+		SetMemoryX(5820712, SetTo, 0, -16777216),
+		SetMemoryX(5820728, SetTo, 0, 255),
+		SetMemoryX(5820728, SetTo, 0, -16777216),
+		
+		SetMemoryX(5820756, SetTo, 0, 255),
+		SetMemoryX(5820760, SetTo, 0, 65280),
+		SetMemoryX(5820772, SetTo, 0, 16711680),
+		SetMemoryX(5820776, SetTo, 0, 65280),
+	
+		SetMemoryX(5820800, SetTo, 0, 16711680),
+		SetMemoryX(5820804, SetTo, 0, -16777216),
+		SetMemoryX(5820820, SetTo, 0, 255),
+		SetMemoryX(5820820, SetTo, 0, -16777216)
+	);
+}
+
+function init() {
+	remove_sight_upgrades();
+	DoActions(
+		SetMemory(6697528, SetTo, 67372292),
+		SetMemory(6697532, SetTo, 67503620),
+		SetMemory(6697536, SetTo, 67372548),
+		SetMemory(6697540, SetTo, 67240455),
+		SetMemory(6697544, SetTo, 67372039),
+		SetMemory(6697548, SetTo, 101057540),
+		SetMemory(6697552, SetTo, 67503622),
+		SetMemory(6697556, SetTo, 101058311),
+		SetMemory(6697560, SetTo, 50660868),
+		SetMemory(6697564, SetTo, 67371779),
+		SetMemory(6697568, SetTo, 67437571),
+		SetMemory(6697572, SetTo, 50726407),
+		SetMemory(6697576, SetTo, 84084228),
+		SetMemory(6697580, SetTo, 67306502),
+		SetMemory(6697584, SetTo, 50595591),
+		SetMemory(6697588, SetTo, 101057541),
+		SetMemory(6697592, SetTo, 67372036),
+		SetMemory(6697596, SetTo, 84149252),
+		SetMemory(6697600, SetTo, 67372039),
+		SetMemory(6697604, SetTo, 67372036),
+		SetMemory(6697608, SetTo, 100992518),
+		SetMemory(6697612, SetTo, 67437317),
+		SetMemory(6697616, SetTo, 67372038),
+		SetMemory(6697620, SetTo, 67372036),
+		SetMemory(6697624, SetTo, 100991748),
+		SetMemory(6697628, SetTo, 67569159),
+		SetMemory(6697632, SetTo, 101057543),
+		SetMemory(6697636, SetTo, 67372036),
+		SetMemory(6697640, SetTo, 67503108),
+		SetMemory(6697644, SetTo, 67372038),
+		SetMemory(6697648, SetTo, 67372036),
+		SetMemory(6697652, SetTo, 67503623),
+		SetMemory(6697656, SetTo, 84280067),
+		SetMemory(6697660, SetTo, 67372806),
+		SetMemory(6697664, SetTo, 67372036),
+		SetMemory(6697668, SetTo, 100926468),
+		SetMemory(6697672, SetTo, 67503110),
+		SetMemory(6697676, SetTo, 67372036),
+		SetMemory(6697680, SetTo, 101123076),
+		SetMemory(6697684, SetTo, 100926980),
+		SetMemory(6697688, SetTo, 101123590),
+		SetMemory(6697692, SetTo, 101058054),
+		SetMemory(6697696, SetTo, 101058052),
+		SetMemory(6697700, SetTo, 101058054),
+		SetMemory(6697704, SetTo, 84215045),
+		SetMemory(6697708, SetTo, 84215045),
+		SetMemory(6697712, SetTo, 84215045),
+		SetMemory(6697716, SetTo, 67503109),
+		SetMemory(6697720, SetTo, 67372036),
+		SetMemory(6697724, SetTo, 67372036),
+		SetMemory(6697728, SetTo, 67372548),
+		SetMemory(6697732, SetTo, 16843012),
+		SetMemory(6697736, SetTo, 33817601),
+		SetMemory(6697740, SetTo, 50397700),
+		SetMemory(6697744, SetTo, 50529027),
+		SetMemory(6697748, SetTo, 50529027),
+		SetMemory(6697752, SetTo, 50529027)
+	);
+}

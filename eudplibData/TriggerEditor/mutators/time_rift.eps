@@ -1,0 +1,96 @@
+import PluginVariables as msqcvar;
+import utils;
+
+/* i'm real proud of this one. at first i thought
+ * it would be impossible in SC1 even with EUD,
+ * but it turned out you can accomplish this
+ * even without EUD.
+ * and with EUD, it looks even better.
+ */
+
+const rift_x = EUDArray(10);
+const rift_y = EUDArray(10);
+var rift_count = 0;
+var rift_loop = 0;
+
+function respawn_rift() {
+	var max_count;
+	if(ElapsedTime(AtMost, 1200)) {
+		max_count = 4;
+	}
+	else if(ElapsedTime(AtMost, 1800)) {
+		max_count = 6;
+	}
+	else {
+		max_count = 8;
+	}
+	RemoveUnit(205, P9);
+	rift_count = 0;
+	for(var i = 0; i < max_count; i++) {
+		const x, y = utils.get_neutral_loc();
+		setloc("shared", x, y);
+		DoActions(
+			SetMemory(6746000, SetTo, 300),
+			SetMemoryX(6725368, SetTo, 393216, 16711680),
+			CreateUnitWithProperties(1, 205, "shared", P7, UnitProperty(invincible=True)),
+			SetMemoryX(6725368, SetTo, 983040, 16711680),
+			CreateUnitWithProperties(1, 205, "shared", P7, UnitProperty(invincible=True)),
+			GiveUnits(All, 205, P7, "Anywhere", P9),
+			SetMemory(6746000, SetTo, 193),
+			SetMemoryX(6725368, SetTo, 0, 16711680)
+		);
+		rift_x[i] = x + 15;
+		rift_y[i] = y + 15;
+		rift_count++;
+	}
+}
+
+function init() {
+	DoActions(
+		// unit 175 (actual effect)
+		SetMemory(6692160, SetTo, 6291552),
+		SetMemory(6692164, SetTo, 6226015),
+		SetMemory(6695708, SetTo, 65537),
+		SetMemoryX(6701884, SetTo, 33, 33),
+		SetMemoryX(6702500, SetTo, 1526726656, -16777216),
+	
+		// unit 205 (background)
+		SetMemory(6692400, SetTo, 131074),
+		SetMemory(6692404, SetTo, 131074),
+		SetMemory(6695828, SetTo, 65537),
+		SetMemoryX(6690480, SetTo, 131072, 131072),
+		SetMemoryX(6702004, SetTo, 4, 4),
+		SetMemoryX(6697500, SetTo, 512, 65280),
+		
+		// sprite 381
+		SetMemoryX(6710360, SetTo, 13762560, -65536)
+	);
+	respawn_rift();
+}
+
+function time_rift() {
+	if(rift_loop >= 5) {
+		rift_loop = 0;
+	}
+	else {
+		rift_loop += 1;
+		for(var i = 0; i < rift_count; i++) {
+			setloc("shared", rift_x[i], rift_y[i]);
+			dilateloc("shared", 64, 64);
+			CreateUnitWithProperties(1, 175, "shared", P7, UnitProperty(intransit=True));
+			RemoveUnit(175, P7);
+		}
+	}
+}
+
+function loop1_normal() {
+	time_rift();
+}
+
+var nextSpawn = 30;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, nextSpawn)) {
+		respawn_rift();
+		nextSpawn += 30;
+	}
+}

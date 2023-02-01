@@ -1,0 +1,154 @@
+import PluginVariables as msqcvar;
+import constants;
+
+function resrand() {
+	// call after srand(seed)
+	const rr = rand();
+	const neutral_ore_level = rr & 0xF;
+	const neutral_gas_level = (rr & 0xF0) / 0x10;
+	const player_ore_level = (rr & 0xF00) / 0x100;
+	const player_gas_level = (rr & 0xF000) / 0x1000;
+
+	// neutral ore
+	if(neutral_ore_level <= 2) {
+		RemoveUnitAt(All, 176, "neutral_resources", P9);
+		RemoveUnitAt(All, 177, "neutral_resources", P9);
+		RemoveUnitAt(All, 178, "neutral_resources", P9);
+	}
+	if(neutral_ore_level <= 6) {
+		RemoveUnitAt(All, 176, "neutral_resources", P10);
+		RemoveUnitAt(All, 177, "neutral_resources", P10);
+		RemoveUnitAt(All, 178, "neutral_resources", P10);
+	}
+	if(neutral_ore_level <= 12) {
+		RemoveUnitAt(All, 176, "neutral_resources", P11);
+		RemoveUnitAt(All, 177, "neutral_resources", P11);
+		RemoveUnitAt(All, 178, "neutral_resources", P11);
+	}
+
+	// neutral gas
+	if(neutral_gas_level <= 2) {
+		RemoveUnitAt(All, 188, "neutral_resources", P9);
+	}
+	if(neutral_gas_level <= 6) {
+		RemoveUnitAt(All, 188, "neutral_resources", P10);
+	}
+	if(neutral_gas_level <= 12) {
+		RemoveUnitAt(All, 188, "neutral_resources", P11);
+	}
+	
+	// player ore
+	if(player_ore_level <= 2) {
+		RemoveUnitAt(All, 176, "Anywhere", P9);
+		RemoveUnitAt(All, 177, "Anywhere", P9);
+		RemoveUnitAt(All, 178, "Anywhere", P9);
+	}
+	if(player_ore_level <= 6) {
+		RemoveUnitAt(All, 176, "Anywhere", P10);
+		RemoveUnitAt(All, 177, "Anywhere", P10);
+		RemoveUnitAt(All, 178, "Anywhere", P10);
+	}
+	if(player_ore_level <= 12) {
+		RemoveUnitAt(All, 176, "Anywhere", P11);
+		RemoveUnitAt(All, 177, "Anywhere", P11);
+		RemoveUnitAt(All, 178, "Anywhere", P11);
+	}
+
+	// player gas
+	if(player_gas_level <= 2) {
+		RemoveUnitAt(All, 188, "Anywhere", P9);
+	}
+	if(player_gas_level <= 6) {
+		RemoveUnitAt(All, 188, "Anywhere", P10);
+	}
+	if(player_gas_level <= 12) {
+		RemoveUnitAt(All, 188, "Anywhere", P11);
+	}
+	
+	foreach(ptr, epd : EUDLoopPlayerUnit(P9)) {
+		const cm = EPDCUnitMap(epd);
+		if(cm.orderID > 0 && (cm.unitType == 176 || cm.unitType == 177 || cm.unitType == 178 || cm.unitType == 188)) {
+			cm.setloc("shared");
+			RemoveUnitAt(All, cm.unitType, "shared", cm.playerID);
+			CreateUnit(1, cm.unitType, "shared", P7);
+		}
+	}
+	foreach(ptr, epd : EUDLoopPlayerUnit(P10)) {
+		const cm = EPDCUnitMap(epd);
+		if(cm.orderID > 0 && (cm.unitType == 176 || cm.unitType == 177 || cm.unitType == 178 || cm.unitType == 188)) {
+			cm.setloc("shared");
+			RemoveUnitAt(All, cm.unitType, "shared", cm.playerID);
+			CreateUnit(1, cm.unitType, "shared", P7);
+		}
+	}
+	foreach(ptr, epd : EUDLoopPlayerUnit(P11)) {
+		const cm = EPDCUnitMap(epd);
+		if(cm.orderID > 0 && (cm.unitType == 176 || cm.unitType == 177 || cm.unitType == 178 || cm.unitType == 188)) {
+			cm.setloc("shared");
+			RemoveUnitAt(All, cm.unitType, "shared", cm.playerID);
+			CreateUnit(1, cm.unitType, "shared", P7);
+		}
+	}
+	
+	ModifyUnitResourceAmount(All, AllPlayers, "Anywhere", 20000 + (rr & 0x3FFF));
+	ModifyUnitResourceAmount(All, AllPlayers, "neutral_resources", 20000 + (rr & 0xFFFC) / 2);
+}
+
+function startup_res() {
+	const level = rand() % 16;
+	if(level == 0) {
+		DoActions(
+			SetResources(Force1, SetTo, 50, Ore),
+			SetResources(Force1, SetTo, 0, Gas),
+			SetResources(Force2, SetTo, 50, Ore),
+			SetResources(Force2, SetTo, 0, Gas),
+		);
+	}
+	else if(level < 4) {
+		DoActions(
+			SetResources(Force1, SetTo, 500, Ore),
+			SetResources(Force1, SetTo, 0, Gas),
+			SetResources(Force2, SetTo, 500, Ore),
+			SetResources(Force2, SetTo, 0, Gas),
+		);
+	}
+	else if(level < 8) {
+		DoActions(
+			SetResources(Force1, SetTo, 500, Ore),
+			SetResources(Force1, SetTo, 200, Gas),
+			SetResources(Force2, SetTo, 500, Ore),
+			SetResources(Force2, SetTo, 200, Gas),
+		);
+	}
+	else if(level < 12) {
+		DoActions(
+			SetResources(Force1, SetTo, 1000, Ore),
+			SetResources(Force1, SetTo, 1000, Gas),
+			SetResources(Force2, SetTo, 1000, Ore),
+			SetResources(Force2, SetTo, 1000, Gas),
+		);
+	}
+	else if(level < 15) {
+		DoActions(
+			SetResources(Force1, SetTo, 1500, Ore),
+			SetResources(Force1, SetTo, 1000, Gas),
+			SetResources(Force2, SetTo, 1500, Ore),
+			SetResources(Force2, SetTo, 1000, Gas),
+		);
+	}
+	else {
+		DoActions(
+			SetResources(Force1, SetTo, 3000, Ore),
+			SetResources(Force1, SetTo, 2000, Gas),
+			SetResources(Force2, SetTo, 3000, Ore),
+			SetResources(Force2, SetTo, 2000, Gas),
+		);
+	}
+
+	for(var i = 0; i < 6; i++) {
+		if(constants.is_computer[i]) {
+			SetResources(i, SetTo, 5000 + level * 1000, Ore);
+			SetResources(i, SetTo, 5000 + level * 1000, Gas);
+		}
+	}
+}

@@ -1,0 +1,84 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+const death_summons = utils.death_summons;
+var prob = 15000;
+
+function init() {
+	DoActions(
+		SetMemory(6694060, SetTo, 20480),
+		SetMemoryX(6688428, SetTo, 7864320, -65536),
+		SetMemoryX(6684444, SetTo, 50331648, -16777216),
+		SetMemoryX(6698764, SetTo, -2113929216, -16777216),
+		SetMemoryX(6690244, SetTo, 131072, 131072),
+		SetMemory(6701532, SetTo, 402686016),
+		SetMemoryX(6693100, SetTo, 33554432, -16777216)
+	);
+	if(Switch("game_hard", Set)) {
+		prob = 25000;
+	}
+}
+
+function spawn_reanimator(player : TrgPlayer) {
+	// clear death table
+	for(var i = 0; i < 106; i++) {
+		SetDeaths(player, SetTo, 0, i);
+	}
+	
+	SetMemoryX(6725284, SetTo, 655360, 16711680);
+	var result = utils.safe_spawn(1, 87, player, $L("p1start") + player, "buffer");
+	var tries = 30;
+	while(result == 0 && tries > 0) {
+		const x, y = utils.get_neutral_loc();
+		setloc("shared", x, y);
+		result = utils.safe_spawn(1, 87, player, "shared", "buffer");
+		tries -= 1;
+	}
+	SetMemoryX(6725284, SetTo, 0, 16711680);
+	
+	MoveLocation("shared", 87, player, "Anywhere");
+	dilateloc("shared", 32, 32);
+	const v = getcurpl();
+	setcurpl(player);
+	if(ElapsedTime(AtMost, 600)) {
+		messages.announce_void_reanimator();
+	}
+	RunAIScriptAt("Set Unit Order To: Junk Yard Dog", "shared");
+	setcurpl(v);
+}
+
+function reanimate() {
+	for(var player = 0; player < 6; player++) {
+		if(Command(player, AtLeast, 1, 87)) {
+			for(var i = 0; i < 106; i++) {
+				if(Deaths(player, AtLeast, 2, i) && death_summons[i] > 0) {
+					SetDeaths(player, Subtract, 1, i);
+					if(rand() < prob) {
+						MoveLocation("reanimate", 87, player, "Anywhere");
+						CreateUnit(1, i, "reanimate", player);
+						utils.decide_target("target", player);
+						utils.order_computer(i, player, "reanimate", Patrol, "target");
+					}
+				}
+			}
+		}
+	}
+}
+
+function loop8_normal() {
+	reanimate();
+}
+
+const next_reanimator_spawn = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+function loop32_normal() {
+	for(var player = 0; player < 6; player++) {
+		if(Command(player, Exactly, 0, 87) && ElapsedTime(AtLeast, 60)) {
+			next_reanimator_spawn[player] += 1;
+			if(next_reanimator_spawn[player] >= 120) {
+				spawn_reanimator(player);
+				next_reanimator_spawn[player] = 0;
+			}
+		}
+	}
+}

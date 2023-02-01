@@ -1,0 +1,42 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+	DoActions(
+		SetMemory(6694596, SetTo, 2048),
+		SetMemoryX(6702068, SetTo, 0, 8390656),
+		SetMemoryX(6690512, SetTo, 131072, 131072),
+		SetMemoryX(6693700, SetTo, 5888, 65280),
+		SetMemoryX(6696828, SetTo, 5888, 65280),
+		SetMemoryX(6703476, SetTo, 5888, 65280),
+		SetMemoryX(6702548, SetTo, 52992, 65280),
+		SetMemory(6692528, SetTo, 131074),
+		SetMemory(6692532, SetTo, 131074),
+		SetMemory(6695892, SetTo, 327685)
+	);
+}
+
+function loop1_normal() {
+	var player;
+	foreach(player : EUDLoopPlayer()) {
+		if(Kills(player, AtLeast, 1, 221)) {
+			SetMemoryEPD(EPD(0x58A214) + player, Subtract, 1);
+			SetResources(player, Add, 888, Ore);
+			SetResources(player, Add, 888, Gas);
+			messages.announce_lucky_envelope(player);
+		}
+	}
+}
+
+var nextSpawn = 88;
+function loop32_normal() {
+	if(ElapsedTime(AtLeast, nextSpawn) && ElapsedTime(AtMost, 3600)) {
+		const x, y = utils.get_neutral_loc();
+		setloc("shared", x, y);
+		const spawned = utils.safe_spawn(1, 221, P7, "shared", "buffer");
+		if(spawned) {
+			nextSpawn += 88;
+		}
+	}
+}

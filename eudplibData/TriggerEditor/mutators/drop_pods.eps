@@ -1,0 +1,188 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+import constants;
+
+var drop_target_x_force1 = 0;
+var drop_target_y_force1 = 0;
+var drop_target_x_force2 = 0;
+var drop_target_y_force2 = 0;
+var drop_state = 0;
+var next_drop_time = 425;
+
+function init() {
+	// dashed circle 580
+	SetMemory(6747480, SetTo, 79);
+	
+	drop_target_x_force1, drop_target_y_force1 = utils.get_force1_loc();
+	drop_target_x_force2, drop_target_y_force2 = utils.get_force2_loc();
+}
+
+function loop32_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && utils.is_in_neutral_zone(cm.posX, cm.posY) && MemoryXEPD(epd + 220 / 4, Exactly, 0, 4)) {
+		if(drop_state == 0 && rand() < 2200) {
+			if(cm.playerID < 3) {
+				drop_target_x_force1, drop_target_y_force1 = cm.getpos("pos");
+			}
+			else {
+				drop_target_x_force2, drop_target_y_force2 = cm.getpos("pos");
+			}
+		}
+	}
+}
+
+function drop_units(player : TrgPlayer) {
+	var drop_level = 1;
+	if(ElapsedTime(AtLeast, 3800)) {
+		drop_level = 6;
+	}
+	else if(ElapsedTime(AtLeast, 3100)) {
+		drop_level = 5;
+	}
+	else if(ElapsedTime(AtLeast, 2400)) {
+		drop_level = 4;
+	}
+	else if(ElapsedTime(AtLeast, 1700)) {
+		drop_level = 3;
+	}
+	else if(ElapsedTime(AtLeast, 1000)) {
+		drop_level = 2;
+	}
+	var do_not_order_lurkers = 0;
+	switch(rand() % 16) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		CreateUnit(4 * drop_level, 37, "drop_pod", player);
+		CreateUnit(2 * drop_level, 38, "drop_pod", player);
+		CreateUnit(drop_level, 39, "drop_pod", player);
+		break;
+		
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		CreateUnit(4 * drop_level, 0, "drop_pod", player);
+		CreateUnit(drop_level, 34, "drop_pod", player);
+		CreateUnit(drop_level, 5, "drop_pod", player);
+		CreateUnit(drop_level, 3, "drop_pod", player);
+		break;
+		
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+		CreateUnit(2 * drop_level, 65, "drop_pod", player);
+		CreateUnit(2 * drop_level, 66, "drop_pod", player);
+		CreateUnit(drop_level, 68, "drop_pod", player);
+		break;
+		
+		case 12:
+		case 13:
+		CreateUnit(drop_level, 61, "drop_pod", player);
+		CreateUnitWithProperties(2 * drop_level, 1, "drop_pod", player, UnitProperty(energy=100, cloaked=True));
+		CreateUnitWithProperties(2 * drop_level, 103, "drop_pod", player, UnitProperty(burrowed=True));
+		CreateUnit(1, 84, "drop_pod", P7);
+		do_not_order_lurkers = 1;
+		break;
+		
+		case 14:
+		CreateUnit(drop_level, 51, "drop_pod", P7);
+		break;
+		
+		case 15:
+		CreateUnitWithProperties(drop_level, 50, "drop_pod", player, UnitProperty(burrowed=True));
+		CreateUnitWithProperties(drop_level, 83, "drop_pod", player, UnitProperty(hanger=3));
+		CreateUnit(6 * drop_level, 13, "drop_pod", player);
+		break;
+	}
+	dilateloc("drop_pod", 128, 128);
+	if(do_not_order_lurkers) {
+		utils.decide_target("target", player);
+		utils.order_computer(61, player, "drop_pod", Patrol, "target");
+		utils.order_computer(84, player, "drop_pod", Patrol, "target");
+		utils.order_computer(1, player, "drop_pod", Patrol, "target");
+	}
+	else {
+		utils.decide_target("target", player);
+		utils.order_computer("(men)", player, "drop_pod", Patrol, "target");
+	}
+}
+
+function loop1_normal() {
+	if(ElapsedTime(AtLeast, next_drop_time)) {
+		drop_state += 1;
+	}
+	if(drop_state == 1) {
+		var drop_state_force1, drop_state_force2;
+		setloc("drop_pod", drop_target_x_force1, drop_target_y_force1);
+		drop_state_force1 = utils.safe_spawn(1, 2, P7, "drop_pod", "buffer");
+		RemoveUnit(2, P7);
+		if(drop_state_force1 == 0) {
+			drop_target_x_force1 += rand() / 256 - 128;
+			drop_target_y_force1 += rand() / 256 - 128;
+			if(!(drop_target_x_force1 < constants.map_max_x - 128 && drop_target_y_force1 < constants.map_max_y - 128
+			  && drop_target_x_force1 > 128 && drop_target_y_force1 > 128)) {
+				drop_target_x_force1, drop_target_y_force1 = utils.get_force1_loc();
+			}
+		}
+
+		setloc("drop_pod", drop_target_x_force2, drop_target_y_force2);
+		drop_state_force2 = utils.safe_spawn(1, 2, P7, "drop_pod", "buffer");
+		RemoveUnit(2, P7);
+		if(drop_state_force2 == 0) {
+			drop_target_x_force2 += rand() / 256 - 128;
+			drop_target_y_force2 += rand() / 256 - 128;
+			if(!(drop_target_x_force2 < constants.map_max_x - 128 && drop_target_y_force2 < constants.map_max_y - 128
+			  && drop_target_x_force2 > 128 && drop_target_y_force1 > 128)) {
+				drop_target_x_force2, drop_target_y_force2 = utils.get_force2_loc();
+			}
+		}
+		else if(drop_state_force1 > 0) {
+			drop_state = 2;
+		}
+	}
+	if(drop_state == 2) {
+		// dilateloc($L("drop_pod"), 128, 128);
+		setloc("drop_pod", drop_target_x_force1, drop_target_y_force1);
+		utils.scan_image(580, "drop_pod", 16, 13);
+		setloc("drop_pod", drop_target_x_force2, drop_target_y_force2);
+		utils.scan_image(580, "drop_pod", 16, 13);
+	}
+	if(drop_state >= 3 && drop_state <= 10) {
+		setloc("drop_pod", drop_target_x_force1, drop_target_y_force1);
+		messages.announce_drop_pod();
+		setloc("drop_pod", drop_target_x_force2, drop_target_y_force2);
+		messages.announce_drop_pod();
+	}
+	if(drop_state == 101 || drop_state == 200 || drop_state == 300) {
+		setloc("drop_pod", drop_target_x_force1, drop_target_y_force1);
+		utils.scan_image(580, "drop_pod", 16, 13);
+		setloc("drop_pod", drop_target_x_force2, drop_target_y_force2);
+		utils.scan_image(580, "drop_pod", 16, 13);
+	}
+	if(drop_state == 400) {
+		setloc("drop_pod", drop_target_x_force1, drop_target_y_force1);
+		drop_units(utils.rand_player_force2());
+		setloc("drop_pod", drop_target_x_force2, drop_target_y_force2);
+		drop_units(utils.rand_player_force1());
+	}
+	
+	if(drop_state >= 401) {
+		drop_state = 0;
+		next_drop_time += 120;
+		if(ElapsedTime(AtLeast, 1800)) {
+			next_drop_time -= 30;
+		}
+		if(ElapsedTime(AtLeast, 3600)) {
+			next_drop_time -= 30;
+		}
+		if(ElapsedTime(AtLeast, 4200)) {
+			next_drop_time -= 30;
+		}
+		drop_target_x_force1, drop_target_y_force1 = utils.get_force1_loc();
+		drop_target_x_force2, drop_target_y_force2 = utils.get_force2_loc();
+	}
+}

@@ -1,0 +1,175 @@
+import PluginVariables as msqcvar;
+import constants;
+
+const ai_races = PVariable(list(0, 0, 0, 0, 0, 0, 0, 0));
+const ai_types = PVariable(list(0, 0, 0, 0, 0, 0, 0, 0));
+
+function decide_race_and_ai_type() {
+	for(var player = 0; player < 6; player++) {
+		if(constants.is_computer[player]) {
+			const x = rand();
+			ai_types[player] = x % 8;
+			ai_races[player] = (x / 8) % 3;
+			// ai_races[player] = 0;
+			SetMemoryXEPD(EPD(0x57EEE8) + 9 * player, SetTo, 256 * ai_races[player], 65280);
+			SetMemoryEPD(EPD(0x582144) + player + 36 * ai_races[player], Add, 1000);
+			bwrite(0x57f1c0 + player, ai_races[player]);
+		}
+	}
+}
+
+function spawn() {
+	DoActions(
+		// resource range
+		SetMemoryX(0x00664340, SetTo, 0, 8192),
+		SetMemoryX(0x00664344, SetTo, 0, 8192),
+		SetMemoryX(0x00664348, SetTo, 0, 8192),
+		SetMemoryX(0x00664370, SetTo, 0, 8192)
+	);
+	for(var player = 0; player < 6; player++) {
+		if(constants.is_computer[player]) {
+			if(Command(player, AtMost, 0, "(buildings)")) {
+				const loc = $L("p1start") + player;
+				switch(ai_races[player]) {
+					case 0: // zerg
+						CreateUnit(1,  "Zerg Hatchery", loc, player);
+						CreateUnit(1,  "Zerg Overlord", loc, player);
+						CreateUnit(12, "Zerg Drone",    loc, player);
+						break;
+					case 1: // terran
+						CreateUnit(1, "Terran Command Center", loc, player);
+						CreateUnit(12, "Terran SCV",           loc, player);
+						break;
+					case 2: // protoss
+						CreateUnit(1, "Protoss Nexus", loc, player);
+						CreateUnit(12, "Protoss Probe", loc, player);
+						break;
+				}
+			}
+		}
+	}
+	DoActions(
+		SetMemoryX(0x00664340, SetTo, 8192, 8192),
+		SetMemoryX(0x00664344, SetTo, 8192, 8192),
+		SetMemoryX(0x00664348, SetTo, 8192, 8192),
+		SetMemoryX(0x00664370, SetTo, 8192, 8192)
+	);
+}
+
+function randomly_set_comps() {
+	// srand(seed) before calling this
+	decide_race_and_ai_type();
+	spawn();
+}
+
+function extra_scanner(player : TrgPlayer, loc : TrgLocation) {
+	DoActions(
+		SetMemory(6695436, SetTo, 2031617),
+		SetMemoryX(6701612, SetTo, 0, 2),
+		SetMemoryX(6697400, SetTo, 33554432, -16777216),
+		CreateUnit(1, 107, loc, player),
+		SetMemory(6695436, SetTo, 4194368),
+		SetMemoryX(6701612, SetTo, 2, 2),
+		SetMemoryX(6697400, SetTo, 67108864, -16777216)
+	);
+}
+
+function run_ai() {
+	const v = getcurpl();
+	for(var player = 0; player < 6; player++) {
+		if(constants.is_computer[player]) {
+			if(Command(player, AtLeast, 1, "(buildings)")) {
+				const location = $L("p1start") + player;
+				setcurpl(player);
+				switch(ai_races[player]) {
+					case 0: // zerg
+						switch(ai_types[player]) {
+							case 0:
+								RunAIScriptAt("Terran 3 - Zerg Town", location);
+								break;
+							case 1:
+								RunAIScriptAt("Terran 6 - Air Attack Zerg", location);
+								break;
+							case 2:
+								RunAIScriptAt("Terran 6 - Ground Attack Zerg", location);
+								break;
+							case 3:
+								RunAIScriptAt("Terran 6 - Zerg Support Town", location);
+								break;
+							case 4:
+								RunAIScriptAt("Terran 7 - Bottom Zerg Town", location);
+								break;
+							case 5:
+								RunAIScriptAt("Terran 7 - Right Zerg Town", location);
+								break;
+							case 6:
+								RunAIScriptAt("Terran 7 - Middle Zerg Town", location);
+								break;
+							case 7:
+								RunAIScriptAt("Terran 11 - Zerg Town", location);
+								break;
+						}
+						break;
+					case 1: // terran
+						switch(ai_types[player]) {
+							case 0:
+								RunAIScriptAt("Terran 5 - Terran Main Town", location);
+								break;
+							case 1:
+								RunAIScriptAt("Terran 8 - Confederate Town", location);
+								break;
+							case 2:
+								RunAIScriptAt("Terran 10 - Confederate Towns", location);
+								break;
+							case 3:
+								RunAIScriptAt("Zerg 1 - Terran Town", location);
+								break;
+							case 4:
+								RunAIScriptAt("Terran 12 - Nuke Town", location);
+								break;
+							case 5:
+								RunAIScriptAt("Terran 12 - Phoenix Town", location);
+								break;
+							case 6:
+								RunAIScriptAt("Terran 12 - Tank Town", location);
+								break;
+							case 7:
+								RunAIScriptAt("Zerg 3 - Terran Town", location);
+								break;
+						}
+						break;
+					case 2: // protoss
+						switch(ai_types[player]) {
+							case 0:
+								RunAIScriptAt("Terran 11 - Lower Protoss Town", location);
+								break;
+							case 1:
+								RunAIScriptAt("Terran 11 - Upper Protoss Town", location);
+								break;
+							case 2:
+								RunAIScriptAt("Zerg 2 - Protoss Town", location);
+								break;
+							case 3:
+								RunAIScriptAt("Zerg 8 - Scout Town", location);
+								break;
+							case 4:
+								RunAIScriptAt("Zerg 6 - Protoss Town", location);
+								break;
+							case 5:
+								RunAIScriptAt("Zerg 8 - Templar Town", location);
+								break;
+							case 6:
+								RunAIScriptAt("Zerg 9 - Left Yellow Protoss", location);
+								break;
+							case 7:
+								RunAIScriptAt("Zerg 9 - Right Yellow Protoss", location);
+								break;
+						}
+						break;
+				}
+				extra_scanner(player, location);
+			}
+		}
+	}
+	setcurpl(v);
+}

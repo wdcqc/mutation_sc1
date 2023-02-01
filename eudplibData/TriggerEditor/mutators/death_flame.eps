@@ -1,0 +1,85 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const deathSummons = utils.death_summons;
+
+function init() {
+	DoActions(
+		// unit 102
+		SetMemoryX(6698780, SetTo, 5898240, 16711680),
+		SetMemoryX(6690628, SetTo, 8519680, 16711680),
+		SetMemoryX(6700364, SetTo, 0, 16711680),
+		SetMemoryX(6702196, SetTo, 16711680, 16711680),
+		SetMemoryX(6697628, SetTo, 0, 16711680),
+		SetMemoryX(6696476, SetTo, 0, 16711680),
+		SetMemory(6701592, SetTo, 402653188),
+		SetMemoryX(6702428, SetTo, 5767168, 16711680),
+		SetMemoryX(6697396, SetTo, 1114112, 16711680),
+		SetMemory(6691576, SetTo, 131074),
+		SetMemory(6691580, SetTo, 131074),
+		SetMemory(6695416, SetTo, 0),
+		SetMemoryX(6690276, SetTo, 6, 65535),
+		SetMemoryX(6693580, SetTo, 8847360, 16711680),
+		SetMemoryX(6696708, SetTo, 8847360, 16711680),
+		SetMemoryX(6699700, SetTo, 8847360, 16711680),
+		SetMemoryX(6703356, SetTo, 8847360, 16711680),
+		SetMemoryX(6697860, SetTo, 8781824, 16711680),
+		SetMemoryX(6693116, SetTo, 0, 16711680),
+		
+		// weapon 90
+		SetMemoryX(6647652, SetTo, 14, 65535),
+		SetMemoryX(6649644, SetTo, 8, 65535),
+		SetMemoryX(6647824, SetTo, 2949120, 16711680),
+		SetMemoryX(6648360, SetTo, 458752, 16711680),
+		SetMemory(6649304, SetTo, 288),
+		SetMemoryX(6648496, SetTo, 262144, 16711680),
+		SetMemoryX(6645584, SetTo, 131072, 16711680),
+		SetMemoryX(6646076, SetTo, 5, 65535),
+		SetMemoryX(6648188, SetTo, 12, 65535),
+		SetMemoryX(6649908, SetTo, 32, 65535),
+		SetMemoryX(6650444, SetTo, 67, 65535),
+		SetMemoryX(6645448, SetTo, 196608, 16711680),
+		SetMemoryX(6650216, SetTo, 0, 16711680),
+		SetMemoryX(6647960, SetTo, 3932160, 16711680),
+		SetMemoryX(6646248, SetTo, 8388608, 16711680),
+		SetMemory(6647312, SetTo, 164),
+		SetMemoryX(6645812, SetTo, 275, 65535),
+		SetMemoryX(6648724, SetTo, 400, 65535),
+		
+		
+		// sprite 354
+		SetMemoryX(6710308, SetTo, 479, 65535),
+		
+		// image 479
+		SetMemory(6747076, SetTo, 239),
+		SetMemoryX(6725636, SetTo, 0, -16777216),
+		SetMemoryX(6739636, SetTo, 16777216, -16777216)
+	);
+}
+
+function loopdeath_comp(player, ut, x, y, epd) {
+	if(ut != 102 && deathSummons[ut] > 0) {
+		setloc($L("shared"), x, y);
+		const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+		if(spawn_ptr > 0) {
+			CreateUnit(1, 102, "shared", P7);
+			const cm = EPDCUnitMap(spawn_epd);
+			if(cm.unitType == 102 && cm.hp > 0) {
+				SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+				SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 1 * 16777216, 0xFF000000);
+			}
+		}
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(deathSummons[ut] > 0) {
+		setloc($L("shared"), x, y);
+		const spawn_ptr, spawn_epd = cunitepdread_epd(EPD(0x00628438));
+		if(spawn_ptr > 0) {
+			CreateUnit(1, 102, "shared", P7);
+			SetMemoryEPD(spawn_epd + 88 / 4, SetTo, x + y * 65536);
+			SetMemoryXEPD(spawn_epd + 76 / 4, SetTo, 1 * 16777216, 0xFF000000);
+		}
+	}
+}

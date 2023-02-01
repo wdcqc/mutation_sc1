@@ -1,0 +1,134 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const twisters = EUDArray(8);
+const twister_tx = EUDArray(8);
+const twister_ty = EUDArray(8);
+var twister_count = 0;
+
+function twister_add() {
+	if(Memory(0x628438, AtLeast, 1)) {
+		const x, y = utils.get_neutral_loc();
+		twister_tx[twister_count], twister_ty[twister_count] = utils.get_neutral_loc();
+		const epd = epdread_epd(EPD(0x628438));
+		twisters[twister_count] = epd;
+		setloc($L("purifier_beam"), x, y);
+		CreateUnitWithProperties(1, 91, "purifier_beam",P7, UnitProperty(invincible=True));
+		GiveUnits(All, 91, P7, "Anywhere", P9);
+		const cm = EPDCUnitMap(epd);
+		if(cm.unitType == 91 && cm.hp > 0) {
+			cm.flingyTopSpeed = 400;
+			cm.orderID = 6;
+			cm.orderState = 0;
+			cm.orderTargetX = twister_tx[twister_count];
+			cm.orderTargetY = twister_ty[twister_count];
+			twister_count += 1;
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+		}
+	}
+}
+
+function init() {
+	DoActions(
+		SetMemory(6701548, SetTo, 1509949508),
+		SetMemory(6691488, SetTo, 65537),
+		SetMemory(6691492, SetTo, 65537),
+		SetMemory(6695372, SetTo, 0),
+		SetMemoryX(6693568, SetTo, 33554432, -16777216),
+		SetMemoryX(6696696, SetTo, 33554432, -16777216),
+		SetMemoryX(6697848, SetTo, 167772160, -16777216),
+		SetMemoryX(6699688, SetTo, 33554432, -16777216),
+		SetMemoryX(6703344, SetTo, 33554432, -16777216),
+		SetMemoryX(6693104, SetTo, 16777216, -16777216),
+		SetMemoryX(6685136, SetTo, 50331648, -16777216),
+		SetMemoryX(6690252, SetTo, 131072, 131072),
+		SetMemoryX(6699000, SetTo, 67108864, -16777216)
+	);
+	twister_add();
+}
+
+function twister_loc(x, y, n) {
+	setloc($L("purifier_beam"), x, y);
+	DoActions(
+		KillUnitAt(All, "(buildings)", "purifier_beam", Force1),
+		KillUnitAt(All, "(buildings)", "purifier_beam", Force2)
+	);
+	dilateloc($L("purifier_beam"), 16, 16);
+	utils.scan_image(391, "purifier_beam", 17, 9);
+	DoActions(
+		KillUnitAt(All, "(men)", "purifier_beam", Force1),
+		KillUnitAt(All, "(men)", "purifier_beam", Force2)
+	);
+	dilateloc($L("purifier_beam"), 16, 16);
+	Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+	Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	if(n % 2 == 0) {
+		dilateloc($L("purifier_beam"), 32, 32);
+		Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+		Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	}
+	if(n % 4 == 0) {
+		dilateloc($L("purifier_beam"), 32, 32);
+		Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+		Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	}
+	if(n % 8 == 0) {
+		dilateloc($L("purifier_beam"), 32, 32);
+		Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+		Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	}
+	if(n % 16 == 0) {
+		dilateloc($L("purifier_beam"), 32, 32);
+		Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+		Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	}
+	if(n == 0) {
+		dilateloc($L("purifier_beam"), 64, 64);
+		Order("(any unit)", Force1, "purifier_beam", Move, "purifier_beam");
+		Order("(any unit)", Force2, "purifier_beam", Move, "purifier_beam");
+	}
+}
+
+var loop_n = 0;
+function loop8_normal() {
+	loop_n += 1;
+	if(loop_n >= 32) {
+		loop_n = 0;
+	}
+	var i;
+	for(i=0; i<twister_count; i++) {
+		const cm = EPDCUnitMap(twisters[i]);
+		if(cm.unitType == 91 && cm.orderID != 0) {
+			var x, y = cm.getpos("pos");
+			twister_loc(x, y, loop_n);
+			if(cm.orderID != 6) {
+				cm.orderID = 6;
+				cm.orderState = 0;
+				twister_tx[i], twister_ty[i] = utils.get_neutral_loc();
+				cm.orderTargetX = twister_tx[i];
+				cm.orderTargetY = twister_ty[i];
+			}
+		}
+	}
+	if(twister_count < 2 && ElapsedTime(AtLeast, 300)) {
+		twister_add();
+	}
+	if(twister_count < 3 && ElapsedTime(AtLeast, 600)) {
+		twister_add();
+	}
+	if(twister_count < 4 && ElapsedTime(AtLeast, 1200)) {
+		twister_add();
+	}
+	if(twister_count < 5 && ElapsedTime(AtLeast, 1800)) {
+		twister_add();
+	}
+	if(twister_count < 6 && ElapsedTime(AtLeast, 2400)) {
+		twister_add();
+	}
+	if(twister_count < 7 && ElapsedTime(AtLeast, 3600)) {
+		twister_add();
+	}
+	if(twister_count < 8 && ElapsedTime(AtLeast, 4800)) {
+		twister_add();
+	}
+}

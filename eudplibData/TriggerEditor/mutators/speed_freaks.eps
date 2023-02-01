@@ -1,0 +1,31 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const speedUnits = [1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+function init() {
+}
+
+function loop8_comp(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && speedUnits[cm.unitType]) {
+		if(MemoryXEPD(epd + 220 / 4, Exactly, 0, 268435456)
+		&& (MemoryXEPD(epd + 76 / 4, AtLeast, 105, 0x0000FF00) || MemoryXEPD(epd + 76 / 4, AtMost, 38, 0x0000FF00))) {
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 268435456, 268435456);
+			SetMemoryEPD(epd + 52 / 4, Add, 500);
+			SetMemoryXEPD(epd + 72 / 4, Add, 48, 65535);
+		}
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106 && speedUnits[cm.unitType]) {
+		if(MemoryXEPD(epd + 220 / 4, Exactly, 0, 268435456)
+		&& (MemoryXEPD(epd + 76 / 4, AtLeast, 105, 0x0000FF00) || MemoryXEPD(epd + 76 / 4, AtMost, 38, 0x0000FF00))) {
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 268435456, 268435456);
+			SetMemoryEPD(epd + 52 / 4, Add, 500);
+			SetMemoryXEPD(epd + 72 / 4, Add, 48, 65535);
+		}
+	}
+}

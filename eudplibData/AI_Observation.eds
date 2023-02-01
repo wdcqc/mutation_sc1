@@ -1,0 +1,16 @@
+[main]
+input: ../scmd/input.scx
+output: ../output/mutation_comp_obs.scx
+[DataEditor.py]
+[ExtraDataEditor.py]
+[dataDumper]
+../ai/aiscript.bin : 0x68C104, copy
+
+[TriggerEditor\main.eps]
+[TriggerEditor\comp_obs.py]
+
+
+[freeze]
+[unlimiter]
+
+

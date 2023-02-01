@@ -1,0 +1,42 @@
+import PluginVariables as msqcvar;
+import utils;
+import messages;
+
+function init() {
+}
+
+const eprint_time = EUDArray(12);
+function loop1_normal() {
+	var sel_epd, epd, frame_cost;
+	foreach(player : EUDLoopPlayer()) {
+		frame_cost = 0;
+		for(sel_epd = EPD(0x6284E8) + player * 12; sel_epd < EPD(0x628518) + player * 12; sel_epd++) {
+			epd = epdread_epd(sel_epd);
+			if(epd > 0 && epd < 180000) {
+				const cm = EPDCUnitMap(epd);
+				if(MemoryXEPD(epd + 144 / 4, Exactly, 2 * 16777216, 0xFF000000)) {
+					SetMemoryXEPD(epd + 144 / 4, SetTo, 0, 0xFF000000);
+					frame_cost += 1;
+					const vitality = cm.hp + ((cm.unitType >= 63 && cm.unitType <= 84) ? cm.shield : 0);
+					if(vitality >= 51200) {
+						frame_cost += 1;
+					}
+				}
+			}
+			else {
+				break;
+			}
+		}
+		if(frame_cost > 0) {
+			SetResources(player, Subtract, frame_cost, Ore);
+			messages.announce_order_cost(player, frame_cost);
+			eprint_time[player] = 32;
+		}
+		if(eprint_time[player] > 0) {
+			if(eprint_time[player] == 1) {
+				messages.announce_order_cost_end(player);
+			}
+			eprint_time[player] -= 1;
+		}
+	}
+}

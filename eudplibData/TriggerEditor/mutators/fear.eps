@@ -1,0 +1,31 @@
+import PluginVariables as msqcvar;
+import utils;
+import main;
+
+function init() {
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.lastAttackingPlayer < 8) {
+		if(MemoryXEPD(epd + 77 / 4, Exactly, 8 * 256, 0x0000FF00)
+		|| MemoryXEPD(epd + 77 / 4, Exactly, 14 * 256, 0x0000FF00)
+		|| MemoryXEPD(epd + 77 / 4, Exactly, 10 * 256, 0x0000FF00)
+		|| MemoryXEPD(epd + 77 / 4, Exactly, 152 * 256, 0x0000FF00)
+		|| MemoryXEPD(epd + 77 / 4, Exactly, 3 * 256, 0x0000FF00)) {
+			if(rand() < 42000) {
+				var x, y = cm.getpos("pos");
+				setloc("shared", x, y);
+				x += rand() / 256 - 128;
+				y += rand() / 256 - 128;
+				setloc("target", x, y);
+				Order(cm.unitType, player, "shared", Move, "target");
+			}
+		}
+		
+		// for concussive_attacks
+		if(!main.mutatorEnabled[37]) {
+			cm.lastAttackingPlayer = 8;
+		}
+	}
+}

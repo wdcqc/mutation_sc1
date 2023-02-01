@@ -1,0 +1,142 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const beams = EUDArray(8);
+const beam_tx = EUDArray(8);
+const beam_ty = EUDArray(8);
+var beam_count = 0;
+
+function beam_add() {
+	if(Memory(0x628438, AtLeast, 1)) {
+		const x, y = utils.get_central_loc();
+		beam_tx[beam_count], beam_ty[beam_count] = utils.get_central_loc();
+		const epd = epdread_epd(EPD(0x628438));
+		beams[beam_count] = epd;
+		setloc("purifier_beam", x, y);
+		CreateUnitWithProperties(1, 91, "purifier_beam", P7, UnitProperty(invincible=True));
+		GiveUnits(All, 91, P7, "Anywhere", P9);
+		const cm = EPDCUnitMap(epd);
+		if(cm.unitType == 91 && cm.hp > 0) {
+			cm.flingyTopSpeed = 240;
+			if(Switch("game_hard", Set)) {
+				cm.flingyTopSpeed = 400;
+			}
+			cm.orderID = 6;
+			cm.orderState = 0;
+			cm.orderTargetX = beam_tx[beam_count];
+			cm.orderTargetY = beam_ty[beam_count];
+			beam_count += 1;
+			SetMemoryXEPD(epd + 220 / 4, SetTo, 2359296, 2359296);
+		}
+	}
+}
+
+function init() {
+	DoActions(
+		SetMemory(6701548, SetTo, 1509949508),
+		SetMemory(6691488, SetTo, 65537),
+		SetMemory(6691492, SetTo, 65537),
+		SetMemory(6695372, SetTo, 0),
+		SetMemoryX(6693568, SetTo, 33554432, -16777216),
+		SetMemoryX(6696696, SetTo, 33554432, -16777216),
+		SetMemoryX(6697848, SetTo, 167772160, -16777216),
+		SetMemoryX(6699688, SetTo, 33554432, -16777216),
+		SetMemoryX(6703344, SetTo, 33554432, -16777216),
+		SetMemoryX(6693104, SetTo, 16777216, -16777216),
+		SetMemoryX(6685136, SetTo, 50331648, -16777216),
+		SetMemoryX(6690252, SetTo, 131072, 131072),
+		SetMemoryX(6699000, SetTo, 67108864, -16777216)
+	);
+	beam_add();
+}
+
+function beam_loc(x, y) {
+	setloc("purifier_beam", x, y);
+	dilateloc("purifier_beam", 32, 32);
+	DoActions(
+		KillUnitAt(All, "(men)", "purifier_beam", Force1),
+		KillUnitAt(All, "(men)", "purifier_beam", Force2),
+		CreateUnit(1, "Protoss Observer", "purifier_beam", P7),
+		SetMemoryX(6701544, SetTo, 4, 4)
+	);
+
+	KillUnitAt(All, "(any unit)", "purifier_beam", P7);
+	if(y >= 92) {
+		addloc("purifier_beam", -8, -64);
+		CreateUnit(1, "Bengalaas", "purifier_beam", P7);
+	}
+	if(y >= 132) {
+		addloc("purifier_beam", 0, -40);
+		CreateUnit(1, "Bengalaas", "purifier_beam", P7);
+	}
+	if(y >= 172) {
+		addloc("purifier_beam", 0, -40);
+		CreateUnit(1, "Bengalaas", "purifier_beam", P7);
+	}
+	if(y >= 212) {
+		addloc("purifier_beam", 0, -40);
+		CreateUnit(1, "Bengalaas", "purifier_beam", P7);
+	}
+	
+	KillUnit("Bengalaas", P7);
+	SetMemoryX(6701544, SetTo, 0, 4);
+}
+
+function loop8_normal() {
+	var i;
+	for(i=0; i<beam_count; i++) {
+		const cm = EPDCUnitMap(beams[i]);
+		if(cm.unitType == 91 && cm.orderID != 0) {
+			cm.flingyTopSpeed = 240;
+			if(Switch("game_hard", Set)) {
+				cm.flingyTopSpeed = 400;
+			}
+			var x, y = cm.getpos("pos");
+			beam_loc(x, y);
+			if(cm.orderID != 6) {
+				cm.orderID = 6;
+				cm.orderState = 0;
+				beam_tx[i], beam_ty[i] = utils.get_central_loc();
+				cm.orderTargetX = beam_tx[i];
+				cm.orderTargetY = beam_ty[i];
+			}
+			else if(utils.is_in_central_zone(x, y)) {
+				setloc("purifier_beam", x, y);
+				dilateloc("purifier_beam", 96, 96);
+				RemoveUnitAt(All, 101, "purifier_beam", P9);
+				const r = rand();
+				if(Bring(Force1, AtLeast, 1, "(men)", "purifier_beam")) {
+					MoveLocation("purifier_beam", "(men)", Force1, "purifier_beam");
+					cm.orderState = 0;
+					dilateloc("purifier_beam", -96, -96);
+					beam_tx[i], beam_ty[i] = getlocTL("purifier_beam");
+					cm.orderTargetX = beam_tx[i];
+					cm.orderTargetY = beam_ty[i];
+				}
+				else if(Bring(Force2, AtLeast, 1, "(men)", "purifier_beam")) {
+					MoveLocation("purifier_beam", "(men)", Force2, "purifier_beam");
+					cm.orderState = 0;
+					dilateloc("purifier_beam", -96, -96);
+					beam_tx[i], beam_ty[i] = getlocTL("purifier_beam");
+					cm.orderTargetX = beam_tx[i];
+					cm.orderTargetY = beam_ty[i];
+				}
+			}
+		}
+	}
+	if(beam_count < 2 && ElapsedTime(AtLeast, 300)) {
+		beam_add();
+	}
+	if(beam_count < 3 && ElapsedTime(AtLeast, 1200)) {
+		beam_add();
+	}
+	if(beam_count < 4 && ElapsedTime(AtLeast, 2100)) {
+		beam_add();
+	}
+	if(beam_count < 5 && ElapsedTime(AtLeast, 3000)) {
+		beam_add();
+	}
+	if(beam_count < 6 && ElapsedTime(AtLeast, 3900)) {
+		beam_add();
+	}
+}

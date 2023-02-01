@@ -1,0 +1,57 @@
+import PluginVariables as msqcvar;
+import utils;
+
+const silence_len = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 150, 0, 150, 0, 200, 200, 0, 200, 200, 200, 200, 200, 0, 200, 0, 200, 200, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 200, 200, 0, 200, 200, 200, 200, 200, 200, 200, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 100, 0, 0, 100, 150, 0, 0, 200, 200, 200, 200, 200, 200, 200, 200, 100, 0, 0, 200, 200, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 200, 200, 0, 200, 0, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+const to_silence_x = EUDArray(20);
+const to_silence_y = EUDArray(20);
+const to_silence_n = EUDArray(20);
+const to_silence_f = EUDArray(20);
+var to_silence_count = 0;
+var silence_range = 112;
+
+function init() {
+	if(Switch("game_hard", Set)) {
+		silence_range = 160;
+	}
+}
+
+function loopdeath_player(player, ut, x, y, epd) {
+	if(ut < 106 && player < 6) {
+		if(silence_len[ut] > 0 && to_silence_count < 20) {
+			to_silence_x[to_silence_count] = x;
+			to_silence_y[to_silence_count] = y;
+			to_silence_n[to_silence_count] = silence_len[ut];
+			if(player < 3) {
+				to_silence_f[to_silence_count] = 2;
+			}
+			else {
+				to_silence_f[to_silence_count] = 1;
+			}
+			to_silence_count += 1;
+		}
+	}
+}
+
+function loop8_player(epd, player) {
+	const cm = EPDCUnitMap(epd);
+	if(cm.unitType < 106) {
+		for(var i = 0; i < to_silence_count; i++) {
+			if((player < 3 && to_silence_f[i] == 1) || (player >= 3 && to_silence_f[i] == 2)) {
+				const x, y = cm.getpos("pos");
+				if(to_silence_x[i] < x + silence_range && x < to_silence_x[i] + silence_range
+				&& to_silence_y[i] < y + silence_range && y < to_silence_y[i] + silence_range) {
+					cm.groundWeaponCooldown = to_silence_n[i];
+					cm.airWeaponCooldown = to_silence_n[i];
+					cm.spellCooldown = to_silence_n[i];
+					setloc("scan", x, y);
+					utils.scan_image(557, "scan", 10, 9);
+				}
+			}
+		}
+	}
+}
+
+function loop8_normal() {
+	to_silence_count = 0;
+}
