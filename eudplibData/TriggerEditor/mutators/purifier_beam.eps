@@ -17,9 +17,9 @@ function beam_add() {
 		GiveUnits(All, 91, P7, "Anywhere", P9);
 		const cm = EPDCUnitMap(epd);
 		if(cm.unitType == 91 && cm.hp > 0) {
-			cm.flingyTopSpeed = 240;
+			cm.topSpeed = 240;
 			if(Switch("game_hard", Set)) {
-				cm.flingyTopSpeed = 400;
+				cm.topSpeed = 400;
 			}
 			cm.orderID = 6;
 			cm.orderState = 0;
@@ -87,10 +87,6 @@ function loop8_normal() {
 	for(i=0; i<beam_count; i++) {
 		const cm = EPDCUnitMap(beams[i]);
 		if(cm.unitType == 91 && cm.orderID != 0) {
-			cm.flingyTopSpeed = 240;
-			if(Switch("game_hard", Set)) {
-				cm.flingyTopSpeed = 400;
-			}
 			var x, y = cm.getpos("pos");
 			beam_loc(x, y);
 			if(cm.orderID != 6) {

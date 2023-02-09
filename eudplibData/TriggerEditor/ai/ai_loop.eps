@@ -6,6 +6,7 @@ var difficulty = 1;
 var income_level = 0;
 const full_attack_delay = EUDArray(8);
 const attack_now = PVariable(list(0, 0, 0, 0, 0, 0, 0, 0));
+const fallen_teammates = PVariable(list(0, 0, 0, 0, 0, 0, 0, 0));
 var full_attack_supply = 380;
 
 var extra_income = 0;
@@ -82,9 +83,40 @@ function auto_upgrade() {
 		}
 		next_upgrade += next_upgrade_delta;
 		upgrade_count += 1;
-		if(upgrade_count >= 3) {
-			next_upgrade = 9999;
+		once(upgrade_count >= 3) {
+			next_upgrade = 10000;
+			next_upgrade_delta = 600;
+			if(difficulty >= 2) {
+				next_upgrade_delta -= 100;
+			}
 		}
+	}
+}
+
+function update_fallen_teammates() {
+	once(Deaths(P1, AtLeast, 10, "(buildings)") && Command(P1, AtMost, 5, "(buildings)") && Bring(P1, AtMost, 0, "(buildings)", $L("p1start") + 0)) {
+		fallen_teammates[1] += 1;
+		fallen_teammates[2] += 1;
+	}
+	once(Deaths(P2, AtLeast, 10, "(buildings)") && Command(P2, AtMost, 5, "(buildings)") && Bring(P2, AtMost, 0, "(buildings)", $L("p1start") + 1)) {
+		fallen_teammates[0] += 1;
+		fallen_teammates[2] += 1;
+	}
+	once(Deaths(P3, AtLeast, 10, "(buildings)") && Command(P3, AtMost, 5, "(buildings)") && Bring(P3, AtMost, 0, "(buildings)", $L("p1start") + 2)) {
+		fallen_teammates[0] += 1;
+		fallen_teammates[1] += 1;
+	}
+	once(Deaths(P4, AtLeast, 10, "(buildings)") && Command(P4, AtMost, 5, "(buildings)") && Bring(P4, AtMost, 0, "(buildings)", $L("p1start") + 3)) {
+		fallen_teammates[4] += 1;
+		fallen_teammates[5] += 1;
+	}
+	once(Deaths(P5, AtLeast, 10, "(buildings)") && Command(P5, AtMost, 5, "(buildings)") && Bring(P5, AtMost, 0, "(buildings)", $L("p1start") + 4)) {
+		fallen_teammates[3] += 1;
+		fallen_teammates[5] += 1;
+	}
+	once(Deaths(P6, AtLeast, 10, "(buildings)") && Command(P6, AtMost, 5, "(buildings)") && Bring(P6, AtMost, 0, "(buildings)", $L("p1start") + 5)) {
+		fallen_teammates[3] += 1;
+		fallen_teammates[4] += 1;
 	}
 }
 
@@ -96,10 +128,8 @@ function set_btr(player : TrgPlayer, btr, ltr) {
 }
 
 function update_btr() {
-	const v = getcurpl();
 	var btr, ltr;
 	for(var player = 0; player < 6; player++) {
-		setcurpl(player);
 		btr = 0;
 		ltr = 0;
 		if(ElapsedTime(AtLeast, 600)) {
@@ -132,22 +162,6 @@ function update_btr() {
 				}
 			}
 		}
-		if(Deaths(Allies, AtLeast, 20, "(buildings)")) {
-			btr += 8;
-			ltr += 1;
-			if(Deaths(Allies, AtLeast, 40, "(buildings)")) {
-				btr += 8;
-				ltr += 1;
-				if(Deaths(Allies, AtLeast, 60, "(buildings)")) {
-					btr += 8;
-					ltr += 1;
-					if(Deaths(Allies, AtLeast, 80, "(buildings)")) {
-						btr += 8;
-						ltr += 1;
-					}
-				}
-			}
-		}
 		if(income_level >= 4) {
 			btr += 4 * (income_level - 3);
 			ltr += income_level - 4;
@@ -167,13 +181,24 @@ function update_btr() {
 				if(Accumulate(player, AtLeast, 24000, Ore) && Accumulate(player, AtLeast, 24000, Gas)) {
 					btr += 12;
 					ltr += 1;
+					if(Accumulate(player, AtLeast, 48000, Ore) && Accumulate(player, AtLeast, 48000, Gas)) {
+						btr += 16;
+						ltr += 1;
+					}
 				}
 			}
+		}
+		if(fallen_teammates[player] >= 2) {
+			btr *= 4;
+			ltr *= 4;
+		}
+		else if(fallen_teammates[player] >= 1) {
+			btr *= 2;
+			ltr *= 2;
 		}
 		build_time_reduction[player] = btr;
 		larva_time_reduction[player] = ltr;
 	}
-	setcurpl(v);
 }
 
 var ai_loop_n = 0;
@@ -184,6 +209,7 @@ function loop8_normal() {
     if(ai_loop_n >= 4) {
         auto_upgrade();
         update_income_level();
+		update_fallen_teammates();
         ai_loop_n = 0;
     }
     hangar_loop_n += 1;
@@ -241,9 +267,23 @@ function loop8_normal() {
 					SetResources(player, Add, 24, Ore);
 					SetResources(player, Subtract, 12, Gas);
 				}
-				if(Accumulate(player, AtLeast, 25000, Ore) && Accumulate(player, AtLeast, 25000, Gas)) {
+				else {
+					if(Accumulate(player, AtLeast, 25000, Ore)) {
+						SetResources(player, Subtract, 30, Ore);
+						SetResources(player, Add, 10, Gas);
+					}
+					if(Accumulate(player, AtLeast, 25000, Gas)) {
+						SetResources(player, Subtract, 30, Gas);
+						SetResources(player, Add, 10, Ore);
+					}
+				}
+				if(Accumulate(player, AtLeast, 50000, Ore) && Accumulate(player, AtLeast, 50000, Gas)) {
 				}
 				else {
+					if(ElapsedTime(AtMost, 600)) {
+						SetResources(player, Add, 1, Ore);
+						SetResources(player, Add, 1, Gas);
+					}
 					if(ElapsedTime(AtMost, 600)) {
 						SetResources(player, Add, 1, Ore);
 						SetResources(player, Add, 1, Gas);
@@ -277,28 +317,25 @@ function loop8_normal() {
 							if(Deaths(player, AtLeast, 25, "(buildings)")) {
 								SetResources(player, Add, 8, Ore);
 								SetResources(player, Add, 8, Gas);
-							}
-						}
-					}
-					const v = getcurpl();
-					setcurpl(player);
-					if(Deaths(Allies, AtLeast, 10, "(buildings)")) {
-						SetResources(player, Add, 3, Ore);
-						SetResources(player, Add, 3, Gas);
-						if(Deaths(Allies, AtLeast, 30, "(buildings)")) {
-							SetResources(player, Add, 6, Ore);
-							SetResources(player, Add, 6, Gas);
-							if(Deaths(Allies, AtLeast, 50, "(buildings)")) {
-								SetResources(player, Add, 9, Ore);
-								SetResources(player, Add, 9, Gas);
-								if(Deaths(Allies, AtLeast, 70, "(buildings)")) {
-									SetResources(player, Add, 12, Ore);
-									SetResources(player, Add, 12, Gas);
+								if(Deaths(player, AtLeast, 40, "(buildings)")) {
+									SetResources(player, Add, 10, Ore);
+									SetResources(player, Add, 10, Gas);
+									if(Deaths(player, AtLeast, 60, "(buildings)")) {
+										SetResources(player, Add, 12, Ore);
+										SetResources(player, Add, 12, Gas);
+									}
 								}
 							}
 						}
 					}
-					setcurpl(v);
+					if(fallen_teammates[player] >= 2) {
+						SetResources(player, Add, 100, Ore);
+						SetResources(player, Add, 100, Gas);
+					}
+					else if(fallen_teammates[player] >= 1) {
+						SetResources(player, Add, 32, Ore);
+						SetResources(player, Add, 32, Gas);
+					}
 				} 
 				if(full_attack_delay[player] > 0) {
 					full_attack_delay[player] -= 1;

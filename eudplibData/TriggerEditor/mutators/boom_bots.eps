@@ -79,7 +79,8 @@ function loop8_normal() {
 						setloc($L("target"), target_x, target_y);
 						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 0, 1073741824);
 						GiveUnits(All, 22, P7, "Anywhere", P9);
-						Order(22, P9, "Anywhere", Move, "target");
+						boombot_cm.setloc("shared");
+						Order(22, P9, "shared", Move, "target");
 						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 1073741824, 1073741824);
 						messages.announce_boom_bots(P1);
 						messages.announce_boom_bots(P2);
@@ -148,7 +149,8 @@ function loop8_normal() {
 						setloc($L("target"), target_x, target_y);
 						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 0, 1073741824);
 						GiveUnits(All, 22, P7, "Anywhere", P9);
-						Order(22, P9, "Anywhere", Move, "target");
+						boombot_cm.setloc("shared");
+						Order(22, P9, "shared", Move, "target");
 						SetMemoryXEPD(spawn_epd + 220 / 4, SetTo, 1073741824, 1073741824);
 						messages.announce_boom_bots(P4);
 						messages.announce_boom_bots(P5);

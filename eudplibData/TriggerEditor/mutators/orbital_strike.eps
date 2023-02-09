@@ -40,16 +40,16 @@ function loop32_player(epd, player) {
 		if(orbit_state == 0 && orbit_count < target_count && cm.currentSpeed1 > 1100 && rand() < 400 * target_count) {
 			orbit_x[orbit_count], orbit_y[orbit_count] = cm.getpos("pos");
 			if(cm.currentVelocityX < 1000000) {
-				orbit_dx[orbit_count] = orbit_x[orbit_count] + cm.currentVelocityX / 8;
+				orbit_dx[orbit_count] = orbit_x[orbit_count] + cm.currentVelocityX / 6;
 			}
 			else {
-				orbit_dx[orbit_count] = orbit_x[orbit_count] - (0 - cm.currentVelocityX) / 8;
+				orbit_dx[orbit_count] = orbit_x[orbit_count] - (0 - cm.currentVelocityX) / 6;
 			}
 			if(cm.currentVelocityY < 1000000) {
-				orbit_dy[orbit_count] = orbit_y[orbit_count] + cm.currentVelocityY / 8;
+				orbit_dy[orbit_count] = orbit_y[orbit_count] + cm.currentVelocityY / 6;
 			}
 			else {
-				orbit_dy[orbit_count] = orbit_y[orbit_count] - (0 - cm.currentVelocityY) / 8;
+				orbit_dy[orbit_count] = orbit_y[orbit_count] - (0 - cm.currentVelocityY) / 6;
 			}
 			
 			if(orbit_dx[orbit_count] < constants.map_max_x

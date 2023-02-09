@@ -17,7 +17,10 @@ function twister_add() {
 		GiveUnits(All, 91, P7, "Anywhere", P9);
 		const cm = EPDCUnitMap(epd);
 		if(cm.unitType == 91 && cm.hp > 0) {
-			cm.flingyTopSpeed = 400;
+			cm.topSpeed = 240;
+			if(Switch("game_hard", Set)) {
+				cm.topSpeed = 400;
+			}
 			cm.orderID = 6;
 			cm.orderState = 0;
 			cm.orderTargetX = twister_tx[twister_count];

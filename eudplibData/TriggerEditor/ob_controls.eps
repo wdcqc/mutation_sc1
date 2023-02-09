@@ -316,6 +316,16 @@ function loop_obs() {
 	if(Memory(0x6CDDC0, Exactly, 32)) { // middleclick
 		SetMemory(0xdfdcfdfc, SetTo, 0);
 	}
+    once(!utils.victory_check_disabled && utils.has_won >= 1) {
+        CreateUnit(1, "Terran Civilian", "ModeSelect", P7);
+        SetDoodadState(Disable, "Terran Civilian", P7, "ModeSelect");
+    }
+    if(utils.victory_check_disabled && utils.has_won >= 1) {
+        printAllAt(2, "\x03[Game Result] \x1DTeam {} has won the game at \x07{} \x1Dgame seconds.", utils.has_won, utils.winning_time);
+    }
+    once(!utils.victory_check_disabled && utils.has_won >= 1 && utils.wait_timer >= 2) {
+		SetMemory(0xdfdcfdfc, SetTo, 0);
+    }
 }
 
 function regular_ob_controls() {

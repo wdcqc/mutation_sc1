@@ -237,22 +237,29 @@ var victory_check_disabled = 0;
 var has_won = 0;
 var wait_timer = 0;
 var wait_to_reveal = 0;
+var winning_time = 0;
 function victory_check() {
-	if(ElapsedTime(AtLeast, 30) && victory_check_disabled == 0) {
+	if(ElapsedTime(AtLeast, 30)) {
 		if(Command(Force1, AtLeast, 1, "(buildings)") && Command(Force2, AtMost, 0, "(buildings)")) {
 			once {
 				messages.victory_force1();
 				has_won = 1;
+				once {
+					winning_time = wread(0x58D6F8);
+				}
 			}
 		}
 		else if(Command(Force1, AtMost, 0, "(buildings)") && Command(Force2, AtLeast, 1, "(buildings)")) {
 			once {
 				messages.victory_force2();
 				has_won = 2;
+				once {
+					winning_time = wread(0x58D6F8);
+				}
 			}
 		}
 	}
-	if(has_won > 0) {
+	if(has_won > 0 && victory_check_disabled == 0) {
 		wait_timer += 1;
 		if(wait_timer >= 3) {
 			once {
